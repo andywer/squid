@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "target": "es2017",
+    "module": "commonjs",
+    "lib": ["es2015"],
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["./types/*"]
+    },
+    "strict": true,
+    "typeRoots": ["./node_modules/@types", "./types"]
+  },
+  "include": [
+    "./src/index.ts"
+  ]
+}

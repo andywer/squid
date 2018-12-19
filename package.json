@@ -1,0 +1,32 @@
+{
+  "name": "sqldb",
+  "version": "0.0.0",
+  "description": "Provides SQL tagged template strings and schema definition code.",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": "andywer/sqldb",
+  "keywords": [
+    "schema",
+    "sql",
+    "table",
+    "template",
+    "postgres"
+  ],
+  "author": "Andy Wermke <andy@dev.next-step-software.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/debug": "0.0.31",
+    "typescript": "^3.2.2"
+  },
+  "dependencies": {
+    "debug": "^4.1.0"
+  },
+  "files": [
+    "*.d.ts",
+    "*.js",
+    "dist/**/*"
+  ]
+}

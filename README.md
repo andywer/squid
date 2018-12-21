@@ -2,34 +2,33 @@
 
 Provides SQL tagged template strings and schema definition code for JavaScript and TypeScript.
 
-Supports Postgres only as of now. Create an issue or pull request if you need support for another database.
-
 Use [`pg-lint`](https://github.com/andywer/pg-lint) to validate SQL queries in your code against your table schemas at build time 🚀
+
+Supports only Postgres right now, but it is easy to add support for MySQL, SQLite, ... as well. Create an issue or pull request if you need support for another database.
 
 
 ## Usage
 
 ```js
-import { defineTable } from "sqldb/schema"
-import { spreadInsert, sql } from "sqldb/sql"
+import { defineTable, sql, spreadInsert } from "sqldb"
 
 const usersTable = defineTable("users", {
   id: Schema.Number,
   name: Schema.String
 })
 
-export async function queryUserById (id) {
-  const { rows } = await database.query(sql`
-    SELECT * FROM users WHERE id = ${id}
-  `)
-  return rows.length > 0 ? rows[0] : null
-}
-
 export async function createUser (record) {
   const { rows } = await database.query(sql`
     INSERT INTO users ${spreadInsert(record)} RETURNING *
   `)
   return rows[0]
+}
+
+export async function queryUserById (id) {
+  const { rows } = await database.query(sql`
+    SELECT * FROM users WHERE id = ${id}
+  `)
+  return rows.length > 0 ? rows[0] : null
 }
 ```
 
@@ -48,6 +47,24 @@ async function updateTimestamp (userID, timestamp = null) {
     WHERE id = ${userID}
   `)
 }
+```
+
+## Examples
+
+```
+> import { sql, spreadAnd, spreadInsert } from './src/index'
+
+> sql`SELECT * FROM users WHERE ${spreadAnd({ name: 'Andy', age: 29 })}`
+{ text: 'SELECT * FROM users WHERE ("name" = $1 AND "age" = $2)',
+  values: [ 'Andy', 29 ] }
+
+> sql`INSERT INTO users ${spreadInsert({ name: 'Andy', age: 29 })}`
+{ text: 'INSERT INTO users ("name", "age") VALUES ($1, $2)',
+  values: [ 'Andy', 29 ] }
+
+> sql`SELECT * FROM users WHERE ${spreadAnd({ name: 'Andy', age: sql.raw('29') })}`
+{ text: 'SELECT * FROM users WHERE ("name" = $1 AND "age" = 29)',
+  values: [ 'Andy' ] }
 ```
 
 

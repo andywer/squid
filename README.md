@@ -10,7 +10,7 @@ Supports only Postgres right now, but it is easy to add support for MySQL, SQLit
 ## Usage
 
 ```js
-import { defineTable, sql, spreadInsert } from "sqldb"
+import { defineTable, sql, spreadInsert } from "sqldb/pg"
 
 const usersTable = defineTable("users", {
   id: Schema.Number,
@@ -52,7 +52,7 @@ async function updateTimestamp (userID, timestamp = null) {
 ## Examples
 
 ```
-> import { sql, spreadAnd, spreadInsert } from './src/index'
+> import { sql, spreadAnd, spreadInsert } from 'sqldb/pg'
 
 > sql`SELECT * FROM users WHERE ${spreadAnd({ name: 'Andy', age: 29 })}`
 { text: 'SELECT * FROM users WHERE ("name" = $1 AND "age" = $2)',

@@ -7,6 +7,12 @@ interface SqlRawExpressionValue {
   rawValue: string
 }
 
+interface SqlAndSpread<RecordType> {
+  type: Symbol,
+  subtype: Symbol,
+  record: RecordType
+}
+
 interface SqlInsertValuesSpread<RecordType> {
   type: Symbol,
   subtype: Symbol,
@@ -16,16 +22,23 @@ interface SqlInsertValuesSpread<RecordType> {
 type SqlSpecialExpressionValue = SqlInsertValuesSpread<any> | SqlRawExpressionValue
 
 const $sqlExpressionValue = Symbol('SQL expression value')
-const $sqlInsertValues = Symbol('SQL INSERT values')
+const $sqlSpreadAnd = Symbol('SQL AND spread')
+const $sqlSpreadInsert = Symbol('SQL INSERT values')
 const $sqlRawExpressionValue = Symbol('SQL raw expression value')
 
 const debugQuery = createDebugLogger('sqldb:query')
 
 const isInsertValuesExpression = (expression: SqlSpecialExpressionValue): expression is SqlInsertValuesSpread<any> =>
-  expression.type === $sqlExpressionValue && expression.subtype === $sqlInsertValues
+  expression.type === $sqlExpressionValue && expression.subtype === $sqlSpreadInsert
+
+const isAndSpreadExpression = (expression: SqlSpecialExpressionValue): expression is SqlInsertValuesSpread<any> =>
+  expression.type === $sqlExpressionValue && expression.subtype === $sqlSpreadAnd
 
 const isRawExpressionValue = (expression: SqlSpecialExpressionValue): expression is SqlRawExpressionValue =>
   expression.type === $sqlExpressionValue && expression.subtype === $sqlRawExpressionValue
+
+const isSpecialExpression = (expression: any): expression is SqlSpecialExpressionValue =>
+  expression && typeof expression === 'object' && expression.type === $sqlExpressionValue
 
 function escapeIdentifier (identifier: string) {
   if (identifier.charAt(0) === '"' && identifier.charAt(identifier.length - 1) === '"') {
@@ -47,7 +60,7 @@ function pushSqlParameter (parameterValues: any[], value: any) {
   return `\$${parameterValues.length}`
 }
 
-function serializeSqlSpecialExpression (expression: SqlSpecialExpressionValue, parameterValues: any[]) {
+function serializeSqlSpecialExpression (expression: SqlSpecialExpressionValue, parameterValues: any[]): string {
   if (isInsertValuesExpression(expression)) {
     const insertionValues = objectEntries<any>(expression.record)
     return (
@@ -55,6 +68,12 @@ function serializeSqlSpecialExpression (expression: SqlSpecialExpressionValue, p
       ` VALUES ` +
       `(${insertionValues.map(([, columnValue]) => pushSqlParameter(parameterValues, columnValue)).join(', ')})`
     )
+  } else if (isAndSpreadExpression(expression)) {
+    const columnValues = objectEntries<any>(expression.record)
+    const andChain = columnValues
+      .map(([ columnName, columnValue ]) => `${escapeIdentifier(columnName)} = ${serializeSqlTemplateExpression(columnValue, parameterValues)}`)
+      .join(' AND ')
+    return `(${andChain})`
   } else if (isRawExpressionValue(expression)) {
     return expression.rawValue
   } else {
@@ -63,7 +82,7 @@ function serializeSqlSpecialExpression (expression: SqlSpecialExpressionValue, p
 }
 
 function serializeSqlTemplateExpression (expression: any, parameterValues: any[]) {
-  if (expression && typeof expression === 'object' && expression.type === $sqlExpressionValue) {
+  if (isSpecialExpression(expression)) {
     return serializeSqlSpecialExpression(expression, parameterValues)
   } else {
     return pushSqlParameter(parameterValues, expression)
@@ -100,10 +119,18 @@ export function raw (rawValue: string): SqlRawExpressionValue {
 
 sql.raw = raw
 
+export function spreadAnd<RecordType> (record: RecordType): SqlAndSpread<RecordType> {
+  return {
+    type: $sqlExpressionValue,
+    subtype: $sqlSpreadAnd,
+    record
+  }
+}
+
 export function spreadInsert<RecordType> (record: RecordType): SqlInsertValuesSpread<RecordType> {
   return {
     type: $sqlExpressionValue,
-    subtype: $sqlInsertValues,
+    subtype: $sqlSpreadInsert,
     record
   }
 }

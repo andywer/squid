@@ -1,7 +1,7 @@
 {
   "name": "sqldb",
   "version": "0.0.0",
-  "description": "Provides SQL tagged template strings and schema definition code.",
+  "description": "Provides SQL tagged template strings and a schema definition function.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
@@ -19,6 +19,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/debug": "0.0.31",
+    "ts-node": "^7.0.1",
     "typescript": "^3.2.2"
   },
   "dependencies": {

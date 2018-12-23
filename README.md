@@ -51,6 +51,8 @@ async function updateTimestamp(userID, timestamp = null) {
 
 ## Examples
 
+The `sql` template tag creates query objects compatible with [`pg`](https://node-postgres.com), the super popular Postgres driver for node.
+
 ```
 > import { sql, spreadAnd, spreadInsert } from 'sqldb/pg'
 

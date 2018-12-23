@@ -15,6 +15,8 @@ import {
   SqlSpecialExpressionValue
 } from './sql'
 
+export * from './schema'
+
 const debugQuery = createDebugLogger('sqldb:query')
 
 function escapeIdentifier (identifier: string) {
@@ -86,7 +88,7 @@ export function sql (texts: TemplateStringsArray, ...values: any[]): PgQueryConf
   return query
 }
 
-export function raw (rawValue: string): SqlRawExpressionValue {
+function rawExpression (rawValue: string): SqlRawExpressionValue {
   return {
     type: $sqlExpressionValue,
     subtype: $sqlRawExpressionValue,
@@ -94,7 +96,9 @@ export function raw (rawValue: string): SqlRawExpressionValue {
   }
 }
 
-sql.raw = raw
+export { rawExpression as raw }
+
+sql.raw = rawExpression
 
 export function spreadAnd<RecordType> (record: RecordType): SqlAndSpread<RecordType> {
   return {

@@ -21,7 +21,9 @@
   "license": "MIT",
   "devDependencies": {
     "@types/debug": "0.0.31",
+    "@types/dedent": "^0.7.0",
     "ava": "^1.0.1",
+    "dedent": "^0.7.0",
     "husky": "^1.2.1",
     "prettier": "^1.15.3",
     "pretty-quick": "^1.8.0",

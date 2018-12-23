@@ -6,7 +6,8 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "prettier --list-different 'src/**' && tslint --project ."
+    "test": "ava",
+    "posttest": "prettier --list-different 'src/**' && tslint --project ."
   },
   "repository": "andywer/sqldb",
   "keywords": [
@@ -20,6 +21,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/debug": "0.0.31",
+    "ava": "^1.0.1",
     "husky": "^1.2.1",
     "prettier": "^1.15.3",
     "pretty-quick": "^1.8.0",
@@ -36,6 +38,15 @@
     "*.js",
     "dist/**/*"
   ],
+  "ava": {
+    "compileEnhancements": false,
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
+  },
   "husky": {
     "hooks": {
       "pre-commit": "pretty-quick --staged"

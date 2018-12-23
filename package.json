@@ -22,6 +22,7 @@
   "devDependencies": {
     "@types/debug": "0.0.31",
     "@types/dedent": "^0.7.0",
+    "@types/node": "^10.12.18",
     "ava": "^1.0.1",
     "dedent": "^0.7.0",
     "husky": "^1.2.1",

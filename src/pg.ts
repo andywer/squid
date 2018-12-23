@@ -70,7 +70,9 @@ function serializeSqlSpecialExpression(
     return expression.rawValue
   } else {
     throw new Error(
-      `Invalid SQL special expression subtype: ${(expression as SqlSpecialExpressionValue).subtype}`
+      `Invalid SQL special expression subtype: ${String(
+        (expression as SqlSpecialExpressionValue).subtype
+      )}`
     )
   }
 }

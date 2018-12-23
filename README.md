@@ -69,7 +69,7 @@ async function updateTimestamp(userID, timestamp = null) {
 
 ## Performance
 
-The performance impact of using the template string is neglectible. Benchmarked it once and it did 1000 queries in ~6ms on my MacBook Pro.
+The performance impact of using the template string is neglectible. Benchmarked it once and it did 1000 queries in ~10ms on my MacBook Pro.
 
 ## Debugging
 

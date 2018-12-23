@@ -23,33 +23,33 @@ test("sql.raw() works", t => {
 
 test("spreadAnd() works", t => {
   t.deepEqual(
-    sql`
+    dedentQueryConfig(sql`
     SELECT * FROM users WHERE ${spreadAnd({
       name: "Hugo",
       age: 20,
       email: sql.raw("'foo@example.com'")
     })}
-  `,
-    {
+  `),
+    dedentQueryConfig({
       text: `SELECT * FROM users WHERE ("name" = $1 AND "age" = $2 AND "email" = 'foo@example.com')`,
       values: ["Hugo", 20]
-    }
+    })
   )
 })
 
 test("spreadInsert() works", t => {
   t.deepEqual(
-    sql`
+    dedentQueryConfig(sql`
     INSERT INTO users ${spreadInsert({
       name: "Hugo",
       age: 20,
       created_at: sql.raw("NOW()")
     })} RETURNING *
-  `,
-    {
+  `),
+    dedentQueryConfig({
       text: `INSERT INTO users ("name", "age", "created_at") VALUES ($1, $2, NOW()) RETURNING *`,
       values: ["Hugo", 20]
-    }
+    })
   )
 })
 

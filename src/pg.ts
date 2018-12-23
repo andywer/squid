@@ -1,5 +1,5 @@
-import createDebugLogger from 'debug'
-import { PgQueryConfig } from './types'
+import createDebugLogger from "debug"
+import { PgQueryConfig } from "./types"
 import {
   $sqlExpressionValue,
   $sqlRawExpressionValue,
@@ -13,13 +13,13 @@ import {
   SqlInsertValuesSpread,
   SqlRawExpressionValue,
   SqlSpecialExpressionValue
-} from './sql'
+} from "./sql"
 
-export * from './schema'
+export * from "./schema"
 
-const debugQuery = createDebugLogger('sqldb:query')
+const debugQuery = createDebugLogger("sqldb:query")
 
-function escapeIdentifier (identifier: string) {
+function escapeIdentifier(identifier: string) {
   if (identifier.charAt(0) === '"' && identifier.charAt(identifier.length - 1) === '"') {
     identifier = identifier.substr(1, identifier.length - 2)
   }
@@ -29,38 +29,55 @@ function escapeIdentifier (identifier: string) {
   return `"${identifier}"`
 }
 
-function objectEntries<T extends { [key: string]: Value }, Value = any> (object: T): [string, Value][] {
+function objectEntries<T extends { [key: string]: Value }, Value = any>(
+  object: T
+): Array<[string, Value]> {
   const keys = Object.keys(object)
   return keys.map(key => [key, object[key]] as [string, Value])
 }
 
-function pushSqlParameter (parameterValues: any[], value: any) {
+function pushSqlParameter(parameterValues: any[], value: any) {
   parameterValues.push(value)
   return `\$${parameterValues.length}`
 }
 
-function serializeSqlSpecialExpression (expression: SqlSpecialExpressionValue, parameterValues: any[]): string {
+function serializeSqlSpecialExpression(
+  expression: SqlSpecialExpressionValue,
+  parameterValues: any[]
+): string {
   if (isInsertValuesExpression(expression)) {
     const insertionValues = objectEntries<any>(expression.record)
     return (
-      `(${insertionValues.map(([columnName]) => escapeIdentifier(columnName)).join(', ')})` +
+      `(${insertionValues.map(([columnName]) => escapeIdentifier(columnName)).join(", ")})` +
       ` VALUES ` +
-      `(${insertionValues.map(([, columnValue]) => pushSqlParameter(parameterValues, columnValue)).join(', ')})`
+      `(${insertionValues
+        .map(([, columnValue]) => pushSqlParameter(parameterValues, columnValue))
+        .join(", ")})`
     )
   } else if (isAndSpreadExpression(expression)) {
     const columnValues = objectEntries<any>(expression.record)
     const andChain = columnValues
-      .map(([ columnName, columnValue ]) => `${escapeIdentifier(columnName)} = ${serializeSqlTemplateExpression(columnValue, parameterValues)}`)
-      .join(' AND ')
+      .map(
+        ([columnName, columnValue]) =>
+          `${escapeIdentifier(columnName)} = ${serializeSqlTemplateExpression(
+            columnValue,
+            parameterValues
+          )}`
+      )
+      .join(" AND ")
     return `(${andChain})`
   } else if (isRawExpressionValue(expression)) {
     return expression.rawValue
   } else {
-    throw new Error(`Invalid SQL special expression subtype: ${(expression as SqlSpecialExpressionValue).subtype}`)
+    throw new Error(
+      `Invalid SQL special expression subtype: ${String(
+        (expression as SqlSpecialExpressionValue).subtype
+      )}`
+    )
   }
 }
 
-function serializeSqlTemplateExpression (expression: any, parameterValues: any[]) {
+function serializeSqlTemplateExpression(expression: any, parameterValues: any[]) {
   if (isSpecialExpression(expression)) {
     return serializeSqlSpecialExpression(expression, parameterValues)
   } else {
@@ -68,7 +85,7 @@ function serializeSqlTemplateExpression (expression: any, parameterValues: any[]
   }
 }
 
-export function sql (texts: TemplateStringsArray, ...values: any[]): PgQueryConfig {
+export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig {
   let resultingSqlQuery = texts[0]
   const parameterValues: any[] = []
 
@@ -76,7 +93,8 @@ export function sql (texts: TemplateStringsArray, ...values: any[]): PgQueryConf
     const expression = values[valueIndex]
     const followingSqlText = texts[valueIndex + 1] as string | undefined
 
-    resultingSqlQuery += serializeSqlTemplateExpression(expression, parameterValues) + (followingSqlText || '')
+    resultingSqlQuery +=
+      serializeSqlTemplateExpression(expression, parameterValues) + (followingSqlText || "")
   }
 
   const query = {
@@ -88,7 +106,7 @@ export function sql (texts: TemplateStringsArray, ...values: any[]): PgQueryConf
   return query
 }
 
-function rawExpression (rawValue: string): SqlRawExpressionValue {
+function rawExpression(rawValue: string): SqlRawExpressionValue {
   return {
     type: $sqlExpressionValue,
     subtype: $sqlRawExpressionValue,
@@ -100,7 +118,7 @@ export { rawExpression as raw }
 
 sql.raw = rawExpression
 
-export function spreadAnd<RecordType> (record: RecordType): SqlAndSpread<RecordType> {
+export function spreadAnd<RecordType>(record: RecordType): SqlAndSpread<RecordType> {
   return {
     type: $sqlExpressionValue,
     subtype: $sqlSpreadAnd,
@@ -108,7 +126,7 @@ export function spreadAnd<RecordType> (record: RecordType): SqlAndSpread<RecordT
   }
 }
 
-export function spreadInsert<RecordType> (record: RecordType): SqlInsertValuesSpread<RecordType> {
+export function spreadInsert<RecordType>(record: RecordType): SqlInsertValuesSpread<RecordType> {
   return {
     type: $sqlExpressionValue,
     subtype: $sqlSpreadInsert,

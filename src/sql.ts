@@ -1,22 +1,16 @@
 import createDebugLogger from "debug"
-import { PgQueryConfig } from "./types"
+import {
+  $sqlExpressionValue,
+  isSpecialExpression,
+  QueryConfig,
+  SqlSpecialExpressionValue
+} from "./internals"
 
-export interface QueryConfig {
-  text: string
-  values: any[]
-}
+export { QueryConfig }
 
-interface SqlSpecialExpressionValue {
-  type: symbol
-  buildFragment(nextParamID: number): QueryConfig
-}
+type PgQueryConfig = QueryConfig
 
 const debugQuery = createDebugLogger("sqldb:query")
-
-const $sqlExpressionValue = Symbol("SQL expression value")
-
-const isSpecialExpression = (expression: any): expression is SqlSpecialExpressionValue =>
-  expression && typeof expression === "object" && expression.type === $sqlExpressionValue
 
 function escapeIdentifier(identifier: string) {
   if (identifier.charAt(0) === '"' && identifier.charAt(identifier.length - 1) === '"') {
@@ -145,7 +139,7 @@ export function spreadAnd(record: any): SqlSpecialExpressionValue {
   }
 }
 
-export function spreadInsert<RecordType>(record: RecordType): SqlSpecialExpressionValue {
+export function spreadInsert(record: any): SqlSpecialExpressionValue {
   const insertionValues = objectEntries<any>(record)
   return {
     type: $sqlExpressionValue,

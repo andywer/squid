@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "prettier --list-different 'src/**' && tslint --project ."
   },
   "repository": "andywer/sqldb",
   "keywords": [
@@ -19,7 +20,12 @@
   "license": "MIT",
   "devDependencies": {
     "@types/debug": "0.0.31",
+    "husky": "^1.2.1",
+    "prettier": "^1.15.3",
+    "pretty-quick": "^1.8.0",
     "ts-node": "^7.0.1",
+    "tslint": "^5.12.0",
+    "tslint-config-prettier": "^1.17.0",
     "typescript": "^3.2.2"
   },
   "dependencies": {
@@ -29,5 +35,14 @@
     "*.d.ts",
     "*.js",
     "dist/**/*"
-  ]
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "prettier": {
+    "semi": false,
+    "printWidth": 100
+  }
 }

@@ -1,4 +1,4 @@
 export interface PgQueryConfig {
-  text: string,
+  text: string
   values: any[]
 }

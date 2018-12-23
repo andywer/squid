@@ -1,6 +1,6 @@
-import * as pg from './pg'
+import * as pg from "./pg"
 
-export * from './pg'
-export * from './schema'
+export * from "./pg"
+export * from "./schema"
 
 export { pg }

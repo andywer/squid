@@ -1,2 +1,2 @@
-export * from "./schema"
-export * from "./sql"
+export * from "./schema";
+export * from "./sql";

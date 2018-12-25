@@ -6,4 +6,5 @@ node_js:
 
 script:
   - npm run build
+  - [-z "$(git diff --raw)"] # Check if `npm run build` created untracked changes (usually dist/*.d.ts)
   - npm test

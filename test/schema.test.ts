@@ -8,9 +8,9 @@ test("can define a schema", t => {
       email: Schema.String,
       email_confirmed: Schema.Boolean,
       profile: Schema.JSON,
-      created_at: Schema.Date,
+      created_at: Schema.default(Schema.Date),
       updated_at: Schema.nullable(Schema.Date),
-      role: Schema.enum(["admin", "user"])
+      roles: Schema.array(Schema.enum(["admin", "user"]))
     })
   )
 })

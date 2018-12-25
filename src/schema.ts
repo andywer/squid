@@ -8,17 +8,24 @@ export enum ColumnType {
   Enum = "enum",
   JSON = "json",
   Number = "number",
+  Object = "object",
   String = "string"
+}
+
+interface ObjectShape {
+  [propName: string]: ColumnDescription<any, any, any, any>
 }
 
 interface ColumnDescription<
   Type extends ColumnType,
-  SubType extends ColumnDescription<any, any, any>,
-  EnumValues extends string | number
+  SubType extends ColumnDescription<any, any, any, any>,
+  EnumValues extends string | number,
+  ObjectProps extends ObjectShape
 > {
   type: Type
   subtype?: SubType
   enum?: EnumValues[]
+  props?: ObjectProps
   hasDefault?: boolean
   nullable?: boolean
 }
@@ -37,7 +44,7 @@ export interface TableSchema<Columns extends TableSchemaDescription> {
 }
 
 type DeriveBuiltinTypeByColumnType<
-  Column extends ColumnDescription<any, any, any>
+  Column extends ColumnDescription<any, any, any, any>
 > = Column extends { type: infer Col }
   ? (Col extends ColumnType.Any
       ? any
@@ -45,26 +52,32 @@ type DeriveBuiltinTypeByColumnType<
       ? boolean
       : Col extends ColumnType.Date
       ? string
-      : Col extends ColumnType.JSON
-      ? any
       : Col extends ColumnType.Number
       ? number
       : Col extends ColumnType.String
       ? string
       : Col extends ColumnType.Enum
-      ? (Column extends ColumnDescription<ColumnType.Enum, any, infer EnumValues>
+      ? (Column extends ColumnDescription<ColumnType.Enum, any, infer EnumValues, any>
           ? EnumValues
           : never)
       : any)
   : never
 
-type DeriveBuiltinType<Column extends ColumnDescription<any, any, any>> = Column extends {
+type DeriveComplexBuiltinType<
+  Column extends ColumnDescription<any, any, any, any>
+> = Column extends ColumnDescription<ColumnType.Array, infer ItemType, any, any>
+  ? Array<DeriveBuiltinTypeByColumnType<ItemType>>
+  : Column extends ColumnDescription<ColumnType.JSON, infer JSONType, any, any>
+  ? DeriveBuiltinTypeByColumnType<JSONType>
+  : Column extends ColumnDescription<ColumnType.Object, any, any, infer ObjectProps>
+  ? { [propName in keyof ObjectProps]: DeriveBuiltinType<ObjectProps[propName]> }
+  : DeriveBuiltinTypeByColumnType<Column>
+
+type DeriveBuiltinType<Column extends ColumnDescription<any, any, any, any>> = Column extends {
   nullable: true
 }
-  ? DeriveBuiltinTypeByColumnType<Exclude<Column, "nullable">> | null
-  : (Column extends ColumnDescription<ColumnType.Array, infer SubType, any>
-      ? Array<DeriveBuiltinTypeByColumnType<SubType>>
-      : DeriveBuiltinTypeByColumnType<Column>)
+  ? DeriveComplexBuiltinType<Column> | null
+  : DeriveComplexBuiltinType<Column>
 
 type MandatoryColumnsNames<Columns extends TableSchemaDescription> = {
   [columnName in keyof Columns]: Columns[columnName] extends { hasDefault: true }
@@ -95,17 +108,24 @@ interface SchemaTypes {
   Any: { type: ColumnType.Any }
   Boolean: { type: ColumnType.Boolean }
   Date: { type: ColumnType.Date }
-  JSON: { type: ColumnType.JSON }
   Number: { type: ColumnType.Number }
   String: { type: ColumnType.String }
-  array<SubType extends ColumnDescription<any, any, any>>(
+
+  Array<SubType extends ColumnDescription<any, any, any, any>>(
     subtype: SubType
-  ): ColumnDescription<ColumnType.Array, SubType, any>
-  default<Column extends ColumnDescription<any, any, any>>(
+  ): ColumnDescription<ColumnType.Array, SubType, any, any>
+  Enum<T extends string | number>(values: T[]): ColumnDescription<ColumnType.Enum, any, T, any>
+  JSON<SubType extends ColumnDescription<any, any, any, any>>(
+    subtype: SubType
+  ): ColumnDescription<ColumnType.JSON, SubType, any, any>
+  Object<Props extends ObjectShape>(
+    props: Props
+  ): ColumnDescription<ColumnType.Object, any, any, Props>
+
+  default<Column extends ColumnDescription<any, any, any, any>>(
     column: Column
   ): Column & { hasDefault: true }
-  enum<T extends string | number>(values: T[]): ColumnDescription<ColumnType.Enum, any, T>
-  nullable<Column extends ColumnDescription<any, any, any>>(
+  nullable<Column extends ColumnDescription<any, any, any, any>>(
     column: Column
   ): Column & { hasDefault: true; nullable: true }
 }
@@ -116,20 +136,26 @@ export const Schema: SchemaTypes = {
   Any: { type: ColumnType.Any },
   Boolean: { type: ColumnType.Boolean },
   Date: { type: ColumnType.Date },
-  JSON: { type: ColumnType.JSON },
   Number: { type: ColumnType.Number },
   String: { type: ColumnType.String },
 
-  array<SubType extends ColumnDescription<any, any, any>>(subtype: SubType) {
+  Array<SubType extends ColumnDescription<any, any, any, any>>(subtype: SubType) {
     return { type: ColumnType.Array, subtype }
   },
-  default<Column extends ColumnDescription<any, any, any>>(column: Column) {
-    return { ...(column as any), hasDefault: true }
-  },
-  enum<T extends string | number>(values: T[]) {
+  Enum<T extends string | number>(values: T[]) {
     return { type: ColumnType.Enum, enum: values }
   },
-  nullable<Column extends ColumnDescription<any, any, any>>(column: Column) {
+  JSON<SubType extends ColumnDescription<any, any, any, any>>(subtype: SubType) {
+    return { type: ColumnType.JSON, subtype }
+  },
+  Object<Props extends ObjectShape>(props: Props) {
+    return { type: ColumnType.Object, props }
+  },
+
+  default<Column extends ColumnDescription<any, any, any, any>>(column: Column) {
+    return { ...(column as any), hasDefault: true }
+  },
+  nullable<Column extends ColumnDescription<any, any, any, any>>(column: Column) {
     return { ...(column as any), hasDefault: true, nullable: true }
   }
 }

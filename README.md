@@ -1,12 +1,20 @@
 # sqldb
 
-Provides SQL tagged template strings and schema definition code for JavaScript and TypeScript.
+Provides SQL tagged template strings and schema definition functions for JavaScript and TypeScript.
 
 Parameters are always SQL-injection-proofed by default. You can explicitly opt-out, though, by wrapping the parameter value in `sql.raw()`.
 
 Use [`pg-lint`](https://github.com/andywer/pg-lint) to validate SQL queries in your code against your table schemas at build time 🚀
 
 Supports only Postgres right now, but it is easy to add support for MySQL, SQLite, ... as well. Create an issue or pull request if you need support for another database.
+
+#### What's wrong with ORMs?
+
+ORMs like [Sequelize](http://docs.sequelizejs.com/) or [TypeORM](http://typeorm.io/) can get you started quickly, but will regularly lead to slow queries and can turn into a hassle in the long run. Read more about it [here](https://medium.com/ameykpatil/why-orm-shouldnt-be-your-best-bet-fffb66314b1b) and [here](https://blog.logrocket.com/why-you-should-avoid-orms-with-examples-in-node-js-e0baab73fa5), for instance.
+
+#### Why not use a query builder?
+
+Query builders are kinda like the small functional brothers of ORMs. Take [Prisma](https://www.prisma.io/), for example. They seem like a good choice, but they all have one issue in common: They provide an abstraction that maps 1:1 to SQL, making you create SQL queries without writing SQL, but using their proprietary API.
 
 ## Usage
 

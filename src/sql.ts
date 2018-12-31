@@ -43,6 +43,12 @@ function serializeSqlTemplateExpression(expression: any, nextParamID: number): Q
   }
 }
 
+/**
+ * SQL template string tag. Returns a query object: `{ text: string, values: any[] }`.
+ * Template expressions are automatically SQL-injection-proofed unless wrapped in `sql.raw()`.
+ *
+ * @example const { rows } = await database.query(sql`SELECT name, email FROM users WHERE id=${userID}`)
+ */
 export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig {
   let parameterValues: any[] = []
   let resultingSqlQuery = texts[0]
@@ -67,6 +73,10 @@ export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfi
   return query
 }
 
+/**
+ * Wrap an SQL template expression value in `sql.raw()` to inject the raw value into the query.
+ * Attention: Can easily lead to SQL injections! Use with caution and only if necessary.
+ */
 function rawExpression(rawValue: string): SqlSpecialExpressionValue {
   return {
     type: $sqlExpressionValue,
@@ -129,6 +139,12 @@ function buildSpreadInsertFragment(
   }
 }
 
+/**
+ * Convenience function to keep WHERE clauses concise. Takes an object:
+ * Keys are supposed to be a column name, values the values that the record must have set.
+ *
+ * @example const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
+ */
 export function spreadAnd(record: any): SqlSpecialExpressionValue {
   const values = objectEntries<any>(record)
   return {
@@ -139,6 +155,10 @@ export function spreadAnd(record: any): SqlSpecialExpressionValue {
   }
 }
 
+/**
+ * Convenience function to keep INSERT statements concise.
+ * @example await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
+ */
 export function spreadInsert(record: any): SqlSpecialExpressionValue {
   const insertionValues = objectEntries<any>(record)
   return {

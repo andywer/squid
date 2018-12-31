@@ -30,15 +30,13 @@ interface ColumnDescription<
   nullable?: boolean
 }
 
-export interface TableSchemaDescription {
-  [columnName: string]: {
-    type: ColumnType
-    enum?: Array<string | number>
-    nullable?: boolean
-  }
+export type ColumnDescriptor = ColumnDescription<any, any, any, any>
+
+export interface TableSchemaDescriptor {
+  [columnName: string]: ColumnDescriptor
 }
 
-export interface TableSchema<Columns extends TableSchemaDescription> {
+export interface TableSchema<Columns extends TableSchemaDescriptor> {
   name: string
   columns: Columns
 }
@@ -79,13 +77,13 @@ type DeriveBuiltinType<Column extends ColumnDescription<any, any, any, any>> = C
   ? DeriveComplexBuiltinType<Column> | null
   : DeriveComplexBuiltinType<Column>
 
-type MandatoryColumnsNames<Columns extends TableSchemaDescription> = {
+type MandatoryColumnsNames<Columns extends TableSchemaDescriptor> = {
   [columnName in keyof Columns]: Columns[columnName] extends { hasDefault: true }
     ? never
     : columnName
 }[keyof Columns]
 
-type ColumnsWithDefaultsNames<Columns extends TableSchemaDescription> = {
+type ColumnsWithDefaultsNames<Columns extends TableSchemaDescriptor> = {
   [columnName in keyof Columns]: Columns[columnName] extends { hasDefault: true }
     ? columnName
     : never
@@ -105,26 +103,48 @@ export type NewTableRow<
   : never
 
 interface SchemaTypes {
+  /** Placeholder. Can stand for any random data type. Avoid using it. */
   Any: { type: ColumnType.Any }
+
+  /** Data type for BOOLEAN columns. */
   Boolean: { type: ColumnType.Boolean }
+
+  /** Data type for DATE, DATETIME, TIMESTAMP columns. */
   Date: { type: ColumnType.Date }
+
+  /** Data type for INTEGER, SMALLINT, BIGINT, FLOAT, REAL, NUMERIC columns. */
   Number: { type: ColumnType.Number }
+
+  /** Data type for CHAR, VARCHAR, TEXT columns. */
   String: { type: ColumnType.String }
 
+  /** Data type for array columns. Pass the data type of the array elements. */
   Array<SubType extends ColumnDescription<any, any, any, any>>(
     subtype: SubType
   ): ColumnDescription<ColumnType.Array, SubType, any, any>
+
+  /** Data type for ENUM columns. Pass an array of possible values. */
   Enum<T extends string | number>(values: T[]): ColumnDescription<ColumnType.Enum, any, T, any>
+
+  /**
+   * Data type for JSON, JSONB columns. Pass Schema.Object(), Schema.Array(), ..., Schema.Any
+   * to declare the content of the JSON(B) column.
+   */
   JSON<SubType extends ColumnDescription<any, any, any, any>>(
     subtype: SubType
   ): ColumnDescription<ColumnType.JSON, SubType, any, any>
+
+  /** Pseudo data type to describe the shape of objects stored in a Schema.JSON() column. */
   Object<Props extends ObjectShape>(
     props: Props
   ): ColumnDescription<ColumnType.Object, any, any, Props>
 
+  /** Declare that this column has a DEFAULT value. Pass the actual schema definition. */
   default<Column extends ColumnDescription<any, any, any, any>>(
     column: Column
   ): Column & { hasDefault: true }
+
+  /** Declare that this column allows NULL values. Implies DEFAULT NULL. */
   nullable<Column extends ColumnDescription<any, any, any, any>>(
     column: Column
   ): Column & { hasDefault: true; nullable: true }
@@ -132,6 +152,9 @@ interface SchemaTypes {
 
 const debugSchema = createDebugLogger("sqldb:schema")
 
+/**
+ * Schema types to declare the data type of table columns.
+ */
 export const Schema: SchemaTypes = {
   Any: { type: ColumnType.Any },
   Boolean: { type: ColumnType.Boolean },
@@ -139,8 +162,8 @@ export const Schema: SchemaTypes = {
   Number: { type: ColumnType.Number },
   String: { type: ColumnType.String },
 
-  Array<SubType extends ColumnDescription<any, any, any, any>>(subtype: SubType) {
-    return { type: ColumnType.Array, subtype }
+  Array<SubType extends ColumnDescription<any, any, any, any>>(elementType: SubType) {
+    return { type: ColumnType.Array, subtype: elementType }
   },
   Enum<T extends string | number>(values: T[]) {
     return { type: ColumnType.Enum, enum: values }
@@ -155,6 +178,7 @@ export const Schema: SchemaTypes = {
   default<Column extends ColumnDescription<any, any, any, any>>(column: Column) {
     return { ...(column as any), hasDefault: true }
   },
+
   nullable<Column extends ColumnDescription<any, any, any, any>>(column: Column) {
     return { ...(column as any), hasDefault: true, nullable: true }
   }
@@ -162,7 +186,10 @@ export const Schema: SchemaTypes = {
 
 const allTableSchemas: Array<TableSchema<any>> = []
 
-export function defineTable<Columns extends TableSchemaDescription>(
+/**
+ * Declare a table's schema. Registers the schema globally.
+ */
+export function defineTable<Columns extends TableSchemaDescriptor>(
   tableName: string,
   schema: Columns
 ): TableSchema<Columns> {
@@ -175,6 +202,9 @@ export function defineTable<Columns extends TableSchemaDescription>(
   return table
 }
 
+/**
+ * Return an array of all defined table schemas.
+ */
 export function getAllTableSchemas() {
   return allTableSchemas
 }

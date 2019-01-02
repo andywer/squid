@@ -10,7 +10,7 @@ export { QueryConfig }
 
 type PgQueryConfig = QueryConfig
 
-const debugQuery = createDebugLogger("sqldb:query")
+const debugQuery = createDebugLogger("squid:query")
 
 function escapeIdentifier(identifier: string) {
   if (identifier.charAt(0) === '"' && identifier.charAt(identifier.length - 1) === '"') {

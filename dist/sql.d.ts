@@ -5,7 +5,12 @@ declare type PgQueryConfig = QueryConfig;
  * SQL template string tag. Returns a query object: `{ text: string, values: any[] }`.
  * Template expressions are automatically SQL-injection-proofed unless wrapped in `sql.raw()`.
  *
- * @example const { rows } = await database.query(sql`SELECT name, email FROM users WHERE id=${userID}`)
+ * @example
+ * const { rows } = await database.query(sql`SELECT name, email FROM users WHERE id=${userID}`)
+ * @example
+ * const { rows } = await database.query<{ name: string, email: string }>(sql`
+ *   SELECT name, email FROM users WHERE id=${userID}
+ * `)
  */
 export declare function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig;
 export declare namespace sql {
@@ -21,11 +26,13 @@ export { rawExpression as raw };
  * Convenience function to keep WHERE clauses concise. Takes an object:
  * Keys are supposed to be a column name, values the values that the record must have set.
  *
- * @example const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
+ * @example
+ * const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
  */
 export declare function spreadAnd(record: any): SqlSpecialExpressionValue;
 /**
  * Convenience function to keep INSERT statements concise.
- * @example await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
+ * @example
+ * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
 export declare function spreadInsert(record: any): SqlSpecialExpressionValue;

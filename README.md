@@ -1,6 +1,6 @@
 # sqldb
 
-Provides SQL tagged template strings and schema definition functions for JavaScript and TypeScript.
+Provides SQL tagged template strings and schema definition functions for JavaScript and TypeScript 3.
 
 Parameters are always SQL-injection-proofed by default. You can explicitly opt-out, though, by wrapping the parameter value in `sql.raw()`.
 
@@ -20,8 +20,9 @@ Query builders are kinda like the small functional brothers of ORMs. Take [Prism
 
 ```js
 import { defineTable, sql, spreadInsert } from "sqldb/pg"
+import database from "./database"
 
-const usersTable = defineTable("users", {
+defineTable("users", {
   id: Schema.Number,
   name: Schema.String
 })
@@ -40,6 +41,39 @@ export async function queryUserById(id) {
   return rows.length > 0 ? rows[0] : null
 }
 ```
+
+In TypeScript:
+
+```ts
+import { defineTable, sql, spreadInsert, NewTableRow, TableRow } from "sqldb/pg"
+import database from "./database"
+
+type NewUserRecord = NewTableRow<typeof usersTable>
+type UserRecord = TableRow<typeof usersTable>
+
+const usersTable = defineTable("users", {
+  id: Schema.Number,
+  name: Schema.String
+})
+
+export async function createUser(record: NewUserRecord): Promise<UserRecord> {
+  const { rows } = await database.query<UserRecord>(sql`
+    INSERT INTO users ${spreadInsert(record)} RETURNING *
+  `)
+  return rows[0]
+}
+
+export async function queryUserById(id: string): Promise<UserRecord> {
+  const { rows } = await database.query<UserRecord>(sql`
+    SELECT * FROM users WHERE id = ${id}
+  `)
+  return rows.length > 0 ? rows[0] : null
+}
+```
+
+We extend the `pg` driver's `query()` methods transparently, so you can pass a generic type parameter specifying the type of the result rows as you can see in the sample above.
+
+The `query()` type parameter defaults to `any`, so you don't have to specify it. If it's set, the type of the `rows` result property will be inferred accordingly.
 
 ## Template values
 
@@ -85,7 +119,7 @@ Turns a template string into a postgres query object, escapes values automatical
 
 Example:
 
-```ts
+```js
 const limit = 50
 await database.query(sql`SELECT * FROM users LIMIT ${50}`)
 
@@ -99,7 +133,7 @@ Wrap your SQL template string values in this call to prevent escaping.
 
 Example:
 
-```ts
+```js
 await database.query(sql`
   UPDATE users SET last_login = ${loggingIn ? "NOW()" : "NULL"} WHERE id = ${userID}
 `)
@@ -111,7 +145,7 @@ Check for equivalence of multiple column's values at once. Handy to keep long WH
 
 Example:
 
-```ts
+```js
 const users = await database.query(sql`
   SELECT * FROM users WHERE ${spreadAnd({ name: "John", birthday: "1990-09-10" })}
 `)
@@ -126,7 +160,7 @@ Spread INSERT VALUES to keep the query sweet and short without losing explicity.
 
 Example:
 
-```ts
+```js
 const users = await database.query(sql`
   INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}
 `)
@@ -145,7 +179,7 @@ See [dist/schema.d.ts](./dist/schema.d.ts) for details.
 
 Example:
 
-```ts
+```js
 defineTable("users", {
   id: Schema.Number,
   email: Schema.String,

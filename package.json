@@ -1,5 +1,5 @@
 {
-  "name": "sqldb",
+  "name": "squid",
   "version": "0.0.0",
   "description": "Provides SQL tagged template strings and a schema definition function.",
   "main": "dist/index.js",
@@ -9,7 +9,7 @@
     "test": "ava",
     "posttest": "prettier --list-different 'src/**' && tslint --project ."
   },
-  "repository": "andywer/sqldb",
+  "repository": "andywer/squid",
   "keywords": [
     "schema",
     "sql",

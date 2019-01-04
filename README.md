@@ -1,25 +1,44 @@
-# sqldb
+<h1 align="center">squid</h1>
 
-Provides SQL tagged template strings and schema definition functions for JavaScript and TypeScript 3.
+<p align="center">
+  <b>SQL tagged template strings and schema definitions for JavaScript & TypeScript 3.</b>
+</p>
 
-Parameters are always SQL-injection-proofed by default. You can explicitly opt-out, though, by wrapping the parameter value in `sql.raw()`.
+<br />
 
 Use [`pg-lint`](https://github.com/andywer/pg-lint) to validate SQL queries in your code against your table schemas at build time 🚀
 
+☑️&nbsp;&nbsp;Static query validation using pg-lint
+👌&nbsp;&nbsp;Static typing made simple
+🛡&nbsp;&nbsp;SQL injection prevention
+⚡️&nbsp;&nbsp;Almost no performance overhead
+
+Parameters are always SQL-injection-proofed by default. You can explicitly opt-out, by wrapping the parameter value in `sql.raw()`.
+
 Supports only Postgres right now, but it is easy to add support for MySQL, SQLite, ... as well. Create an issue or pull request if you need support for another database.
 
-#### What's wrong with ORMs?
-
-ORMs like [Sequelize](http://docs.sequelizejs.com/) or [TypeORM](http://typeorm.io/) can get you started quickly, but will regularly lead to slow queries and can turn into a hassle in the long run. Read more about it [here](https://medium.com/ameykpatil/why-orm-shouldnt-be-your-best-bet-fffb66314b1b) and [here](https://blog.logrocket.com/why-you-should-avoid-orms-with-examples-in-node-js-e0baab73fa5), for instance.
+## Why?
 
 #### Why not use a query builder?
 
-Query builders are kinda like the small functional brothers of ORMs. Take [Prisma](https://www.prisma.io/), for example. They seem like a good choice, but they all have one issue in common: They provide an abstraction that maps 1:1 to SQL, making you create SQL queries without writing SQL, but using their proprietary API.
+Query builders like [Prisma](https://www.prisma.io/) or [Knex.js](https://knexjs.org/) seem like a good choice, but they all have one issue in common: They provide an abstraction that maps 1:1 to SQL, making you create SQL queries without writing SQL, but using their proprietary API.
+
+You don't just require developers to learn both, SQL and the query builder's API, but the additional abstraction layer is also an additional source of error.
+
+#### Why not use an ORM?
+
+ORMs like [Sequelize](http://docs.sequelizejs.com/) or [TypeORM](http://typeorm.io/) can get you started quickly, but will regularly lead to slow queries and can turn into a hassle in the long run. Read more about it [here](https://medium.com/ameykpatil/why-orm-shouldnt-be-your-best-bet-fffb66314b1b) and [here](https://blog.logrocket.com/why-you-should-avoid-orms-with-examples-in-node-js-e0baab73fa5), for instance.
+
+## Installation
+
+```sh
+npm install squid
+```
 
 ## Usage
 
 ```js
-import { defineTable, sql, spreadInsert } from "sqldb/pg"
+import { defineTable, sql, spreadInsert } from "squid/pg"
 import database from "./database"
 
 defineTable("users", {
@@ -45,7 +64,7 @@ export async function queryUserById(id) {
 In TypeScript:
 
 ```ts
-import { defineTable, sql, spreadInsert, NewTableRow, TableRow } from "sqldb/pg"
+import { defineTable, sql, spreadInsert, NewTableRow, TableRow } from "squid/pg"
 import database from "./database"
 
 type NewUserRecord = NewTableRow<typeof usersTable>
@@ -96,7 +115,7 @@ async function updateTimestamp(userID, timestamp = null) {
 The `sql` template tag creates query objects compatible with [`pg`](https://node-postgres.com), the super popular Postgres driver for node.
 
 ```
-> import { sql, spreadAnd, spreadInsert } from "sqldb/pg"
+> import { sql, spreadAnd, spreadInsert } from "squid/pg"
 
 > sql`SELECT * FROM users WHERE ${spreadAnd({ name: "Andy", age: 29 })}`
 { text: "SELECT * FROM users WHERE ("name" = $1 AND "age" = $2)",
@@ -224,7 +243,7 @@ The performance impact of using the template string is neglectible. Benchmarked 
 
 ## Debugging
 
-Set the environment variable `DEBUG` to `sqldb:*` to enable debug logging for this package.
+Set the environment variable `DEBUG` to `squid:*` to enable debug logging for this package.
 
 ## License
 

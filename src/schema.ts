@@ -150,7 +150,7 @@ interface SchemaTypes {
   ): Column & { hasDefault: true; nullable: true }
 }
 
-const debugSchema = createDebugLogger("sqldb:schema")
+const debugSchema = createDebugLogger("squid:schema")
 
 /**
  * Schema types to declare the data type of table columns.

@@ -4,6 +4,11 @@
   <b>SQL tagged template strings and schema definitions for JavaScript & TypeScript 3.</b>
 </p>
 
+<p align="center">
+  <a href="https://travis-ci.org/andywer/squid"><img alt="Build status" src="https://travis-ci.org/andywer/squid.svg?branch=master" /></a>
+  <a href="https://www.npmjs.com/package/squid"><img alt="npm version" src="https://img.shields.io/npm/v/squid.svg" /></a>
+</p>
+
 <br />
 
 Use [`pg-lint`](https://github.com/andywer/pg-lint) to validate SQL queries in your code against your table schemas at build time 🚀

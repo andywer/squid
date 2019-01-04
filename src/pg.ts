@@ -1,3 +1,4 @@
+// tslint:disable-next-line no-implicit-dependencies
 import * as pg from "pg"
 
 export * from "./schema"

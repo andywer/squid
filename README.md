@@ -69,7 +69,8 @@ export async function queryUserById(id) {
 In TypeScript:
 
 ```ts
-import { defineTable, sql, spreadInsert, NewTableRow, TableRow } from "squid/pg"
+import { defineTable, Schema, NewTableRow, TableRow } from "squid"
+import { sql, spreadInsert } from "squid/pg"
 import database from "./database"
 
 type NewUserRecord = NewTableRow<typeof usersTable>
@@ -98,6 +99,26 @@ export async function queryUserById(id: string): Promise<UserRecord> {
 We extend the `pg` driver's `query()` methods transparently, so you can pass a generic type parameter specifying the type of the result rows as you can see in the sample above.
 
 The `query()` type parameter defaults to `any`, so you don't have to specify it. If it's set, the type of the `rows` result property will be inferred accordingly.
+
+## Import
+
+All schema-related exports are database-driver-agnostic, so they can be imported from the main entrypoint `squid`:
+
+```ts
+import { defineTable, Schema, NewTableRow, TableRow } from "squid"
+```
+
+Non-schema-related exports are exported by the database-specific submodule `squid/pg`:
+
+```ts
+import { sql, spreadInsert } from "squid/pg"
+```
+
+For convenience `squid/pg` also exposes all the database-agnostic schema exports, so you can have one import declaration for everything:
+
+```ts
+import { defineTable, sql, spreadInsert, Schema, NewTableRow, TableRow } from "squid"
+```
 
 ## Template values
 

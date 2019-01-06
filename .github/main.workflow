@@ -10,7 +10,6 @@ action "Tag" {
 }
 
 action "Install" {
-  needs = "Tag"
   uses = "actions/npm@master"
   args = "install"
 }
@@ -28,7 +27,7 @@ action "Test" {
 }
 
 action "Publish" {
-  needs = ["Build", "Test"]
+  needs = ["Tag", "Build", "Test"]
   uses = "actions/npm@master"
   args = "publish --access public"
   secrets = ["NPM_AUTH_TOKEN"]

@@ -11,9 +11,9 @@
 
 <br />
 
-Use [`pg-lint`](https://github.com/andywer/pg-lint) to validate SQL queries in your code against your table schemas at build time 🚀
+Use [`postguard`](https://github.com/andywer/postguard) to validate SQL queries in your code against your table schemas at build time 🚀
 
-☑️&nbsp;&nbsp;Static query validation using pg-lint
+☑️&nbsp;&nbsp;Static query validation using postguard
 👌&nbsp;&nbsp;Static typing made simple
 🛡&nbsp;&nbsp;SQL injection prevention
 ⚡️&nbsp;&nbsp;Almost no performance overhead
@@ -216,7 +216,7 @@ const users = await database.query(sql`
 
 ### defineTable(tableName: string, schema: { [columnName: string]: Schema.\* })
 
-Define a table's schema, so the queries can be validated at build time with `pg-lint`. When using TypeScript you can use `TableRow<typeof table>` and `NewTableRow<typeof table>` to derive TypeScript interfaces of your table records.
+Define a table's schema, so the queries can be validated at build time with `postguard`. When using TypeScript you can use `TableRow<typeof table>` and `NewTableRow<typeof table>` to derive TypeScript interfaces of your table records.
 
 See [dist/schema.d.ts](./dist/schema.d.ts) for details.
 

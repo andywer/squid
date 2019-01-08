@@ -13,12 +13,12 @@
 
 The simple and safe way of writing SQL queries in node.js. Use [`postguard`](https://github.com/andywer/postguard) to validate SQL queries in your code against your table schemas at build time 🚀
 
-👌&nbsp;&nbsp;Static typing made simple<br />
-🛡&nbsp;&nbsp;SQL injection prevention<br />
-✅&nbsp;&nbsp;Static query validation using postguard<br />
-⚡️&nbsp;&nbsp;Almost no performance overhead<br />
+&nbsp;&nbsp;&nbsp;&nbsp;👌&nbsp;&nbsp;Static typing made simple<br />
+&nbsp;&nbsp;&nbsp;&nbsp;🛡&nbsp;&nbsp;SQL injection prevention<br />
+&nbsp;&nbsp;&nbsp;&nbsp;🔦&nbsp;&nbsp;Static query validation using postguard<br />
+&nbsp;&nbsp;&nbsp;&nbsp;⚡️&nbsp;&nbsp;Almost no performance overhead<br />
 
-Parameters are always SQL-injection-proofed by default. You can explicitly opt-out, by wrapping the parameter value in `sql.raw()`.
+Parameters are SQL-injection-proofed by default. You can explicitly opt-out, by wrapping the parameter value in `sql.raw()`.
 
 Supports only Postgres right now, but it is easy to add support for MySQL, SQLite, ... as well. Create an issue or pull request if you need support for another database.
 

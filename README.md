@@ -13,10 +13,10 @@
 
 Use [`postguard`](https://github.com/andywer/postguard) to validate SQL queries in your code against your table schemas at build time 🚀
 
-☑️&nbsp;&nbsp;Static query validation using postguard
-👌&nbsp;&nbsp;Static typing made simple
-🛡&nbsp;&nbsp;SQL injection prevention
-⚡️&nbsp;&nbsp;Almost no performance overhead
+☑️&nbsp;&nbsp;Static query validation using postguard<br />
+👌&nbsp;&nbsp;Static typing made simple<br />
+🛡&nbsp;&nbsp;SQL injection prevention<br />
+⚡️&nbsp;&nbsp;Almost no performance overhead<br />
 
 Parameters are always SQL-injection-proofed by default. You can explicitly opt-out, by wrapping the parameter value in `sql.raw()`.
 
@@ -140,25 +140,25 @@ async function updateTimestamp(userID, timestamp = null) {
 
 The `sql` template tag creates query objects compatible with [`pg`](https://node-postgres.com), the super popular Postgres driver for node.
 
-```
-> import { sql, spreadAnd, spreadInsert } from "squid/pg"
+```js
+import { sql, spreadAnd, spreadInsert } from "squid/pg"
 
-> sql`SELECT * FROM users WHERE ${spreadAnd({ name: "Andy", age: 29 })}`
-{ text: "SELECT * FROM users WHERE ("name" = $1 AND "age" = $2)",
-  values: [ "Andy", 29 ] }
+sql`SELECT * FROM users WHERE ${spreadAnd({ name: "Andy", age: 29 })}`
+// => { text: "SELECT * FROM users WHERE ("name" = $1 AND "age" = $2)",
+//      values: [ "Andy", 29 ] }
 
-> sql`INSERT INTO users ${spreadInsert({ name: "Andy", age: 29 })}`
-{ text: "INSERT INTO users ("name", "age") VALUES ($1, $2)",
-  values: [ "Andy", 29 ] }
+sql`INSERT INTO users ${spreadInsert({ name: "Andy", age: 29 })}`
+// => { text: "INSERT INTO users ("name", "age") VALUES ($1, $2)",
+//      values: [ "Andy", 29 ] }
 
-> sql`SELECT * FROM users WHERE ${spreadAnd({ name: "Andy", age: sql.raw("29") })}`
-{ text: "SELECT * FROM users WHERE ("name" = $1 AND "age" = 29)",
-  values: [ "Andy" ] }
+sql`SELECT * FROM users WHERE ${spreadAnd({ name: "Andy", age: sql.raw("29") })}`
+// => { text: "SELECT * FROM users WHERE ("name" = $1 AND "age" = 29)",
+//      values: [ "Andy" ] }
 ```
 
 ## API
 
-### sql\`\`
+### sql\`...\`
 
 Turns a template string into a postgres query object, escapes values automatically unless they are wrapped in `sql.raw()`.
 

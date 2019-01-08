@@ -11,11 +11,11 @@
 
 <br />
 
-Use [`postguard`](https://github.com/andywer/postguard) to validate SQL queries in your code against your table schemas at build time 🚀
+The simple and safe way of writing SQL queries in node.js. Use [`postguard`](https://github.com/andywer/postguard) to validate SQL queries in your code against your table schemas at build time 🚀
 
-☑️&nbsp;&nbsp;Static query validation using postguard<br />
 👌&nbsp;&nbsp;Static typing made simple<br />
 🛡&nbsp;&nbsp;SQL injection prevention<br />
+✅&nbsp;&nbsp;Static query validation using postguard<br />
 ⚡️&nbsp;&nbsp;Almost no performance overhead<br />
 
 Parameters are always SQL-injection-proofed by default. You can explicitly opt-out, by wrapping the parameter value in `sql.raw()`.
@@ -42,21 +42,17 @@ npm install squid
 
 ## Usage
 
+### JavaScript
+
 ```js
 import { defineTable, sql, spreadInsert } from "squid/pg"
 import database from "./database"
 
+// Feel free to put the table schema in a different file
 defineTable("users", {
   id: Schema.Number,
   name: Schema.String
 })
-
-export async function createUser(record) {
-  const { rows } = await database.query(sql`
-    INSERT INTO users ${spreadInsert(record)} RETURNING *
-  `)
-  return rows[0]
-}
 
 export async function queryUserById(id) {
   const { rows } = await database.query(sql`
@@ -66,20 +62,27 @@ export async function queryUserById(id) {
 }
 ```
 
-In TypeScript:
+### TypeScript
 
 ```ts
+// schema.ts
 import { defineTable, Schema, NewTableRow, TableRow } from "squid"
-import { sql, spreadInsert } from "squid/pg"
-import database from "./database"
 
-type NewUserRecord = NewTableRow<typeof usersTable>
-type UserRecord = TableRow<typeof usersTable>
+export type NewUserRecord = NewTableRow<typeof usersTable>
+export type UserRecord = TableRow<typeof usersTable>
 
 const usersTable = defineTable("users", {
   id: Schema.Number,
   name: Schema.String
 })
+```
+
+
+```ts
+// users.ts
+import { sql, spreadInsert } from "squid/pg"
+import database from "./database"
+import { NewUserRecord, UserRecord } from "./schema"
 
 export async function createUser(record: NewUserRecord): Promise<UserRecord> {
   const { rows } = await database.query<UserRecord>(sql`
@@ -96,9 +99,42 @@ export async function queryUserById(id: string): Promise<UserRecord> {
 }
 ```
 
-We extend the `pg` driver's `query()` methods transparently, so you can pass a generic type parameter specifying the type of the result rows as you can see in the sample above.
+We extend the `pg` driver's `query()` method types transparently, so you can pass a generic type parameter specifying the type of the result rows as you can see in the sample above.
 
 The `query()` type parameter defaults to `any`, so you don't have to specify it. If it's set, the type of the `rows` result property will be inferred accordingly.
+
+
+## Query values
+
+All expressions in the SQL template strings will be escaped properly automatically, so you don't need to worry about SQL injection attacks too much.
+
+If you need to pass a value dynamically that should not be escaped, you can use `sql.raw`:
+
+```js
+async function updateTimestamp(userID, timestamp = null) {
+  await database.query(sql`
+    UPDATE users
+    SET timestamp = ${timestamp || sql.raw("NOW()")}
+    WHERE id = ${userID}
+  `)
+}
+```
+
+## Tag function
+
+The `sql` template tag creates query objects compatible with [`pg`](https://node-postgres.com), the super popular Postgres driver for node.
+
+```js
+import { sql, spreadInsert } from "squid/pg"
+
+sql`INSERT INTO users ${spreadInsert({ name: "Andy", age: 29 })}`
+// => { text: "INSERT INTO users ("name", "age") VALUES ($1, $2)",
+//      values: [ "Andy", 29 ] }
+
+sql`SELECT * FROM users WHERE age < ${maxAge}`
+// => { text: "SELECT * FROM users WHERE age < $1",
+//      values: [ maxAge ] }
+```
 
 ## Import
 
@@ -118,42 +154,6 @@ For convenience `squid/pg` also exposes all the database-agnostic schema exports
 
 ```ts
 import { defineTable, sql, spreadInsert, Schema, NewTableRow, TableRow } from "squid"
-```
-
-## Template values
-
-All expressions in the SQL template strings will be escaped properly automatically, so you don't need to worry about SQL injection attacks too much.
-
-If you need to pass a value dynamically that should not be escaped, you can use `sql.raw`:
-
-```js
-async function updateTimestamp(userID, timestamp = null) {
-  await database.query(sql`
-    UPDATE users
-    SET timestamp = ${timestamp || sql.raw("NOW()")}
-    WHERE id = ${userID}
-  `)
-}
-```
-
-## Examples
-
-The `sql` template tag creates query objects compatible with [`pg`](https://node-postgres.com), the super popular Postgres driver for node.
-
-```js
-import { sql, spreadAnd, spreadInsert } from "squid/pg"
-
-sql`SELECT * FROM users WHERE ${spreadAnd({ name: "Andy", age: 29 })}`
-// => { text: "SELECT * FROM users WHERE ("name" = $1 AND "age" = $2)",
-//      values: [ "Andy", 29 ] }
-
-sql`INSERT INTO users ${spreadInsert({ name: "Andy", age: 29 })}`
-// => { text: "INSERT INTO users ("name", "age") VALUES ($1, $2)",
-//      values: [ "Andy", 29 ] }
-
-sql`SELECT * FROM users WHERE ${spreadAnd({ name: "Andy", age: sql.raw("29") })}`
-// => { text: "SELECT * FROM users WHERE ("name" = $1 AND "age" = 29)",
-//      values: [ "Andy" ] }
 ```
 
 ## API

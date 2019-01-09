@@ -91,11 +91,11 @@ export async function createUser(record: NewUserRecord): Promise<UserRecord> {
   return rows[0]
 }
 
-export async function queryUserById(id: string): Promise<UserRecord> {
+export async function queryUserById(id: string): Promise<UserRecord | null> {
   const { rows } = await database.query<UserRecord>(sql`
     SELECT * FROM users WHERE id = ${id}
   `)
-  return rows.length > 0 ? rows[0] : null
+  return rows[0] || null
 }
 ```
 

@@ -1,6 +1,6 @@
 import test from "ava"
 import dedent from "dedent"
-import { spreadAnd, spreadInsert, sql, QueryConfig } from "../src/pg"
+import { spreadAnd, spreadInsert, spreadUpdate, sql, QueryConfig } from "../src/pg"
 
 const dedentQueryConfig = (queryConfig: QueryConfig) => ({
   ...queryConfig,
@@ -48,6 +48,22 @@ test("spreadInsert() works", t => {
   `),
     dedentQueryConfig({
       text: `INSERT INTO users ("name", "age", "created_at") VALUES ($1, $2, NOW()) RETURNING *`,
+      values: ["Hugo", 20]
+    })
+  )
+})
+
+test("spreadUpdate() works", t => {
+  t.deepEqual(
+    dedentQueryConfig(sql`
+    UPDATE users SET ${spreadUpdate({
+      name: "Hugo",
+      age: 20,
+      created_at: sql.raw("NOW()")
+    })}
+  `),
+    dedentQueryConfig({
+      text: `UPDATE users SET "name" = $1, "age" = $2, "created_at" = NOW()`,
       values: ["Hugo", 20]
     })
   )

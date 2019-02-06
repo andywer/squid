@@ -77,7 +77,6 @@ const usersTable = defineTable("users", {
 })
 ```
 
-
 ```ts
 // users.ts
 import { sql, spreadInsert } from "squid/pg"
@@ -102,7 +101,6 @@ export async function queryUserById(id: string): Promise<UserRecord | null> {
 We extend the `pg` driver's `query()` method types transparently, so you can pass a generic type parameter specifying the type of the result rows as you can see in the sample above.
 
 The `query()` type parameter defaults to `any`, so you don't have to specify it. If it's set, the type of the `rows` result property will be inferred accordingly.
-
 
 ## Query values
 
@@ -212,6 +210,23 @@ const users = await database.query(sql`
 
 // same as:
 // sql`INSERT INTO users ("name", "email") VALUES ('John', 'john@example.com')`
+```
+
+### spreadUpdate({ [columnName: string]: any })
+
+Spread INSERT VALUES to keep the query sweet and short without losing explicity.
+
+Example:
+
+```js
+await database.query(sql`
+  UPDATE users
+  SET ${spreadUpdate({ name: "John", email: "john@example.com" })}
+  WHERE id = 1
+`)
+
+// same as:
+// sql`UPDATE users SET "name" = 'John', "email" = 'john@example.com' WHERE id = 1`
 ```
 
 ### defineTable(tableName: string, schema: { [columnName: string]: Schema.\* })

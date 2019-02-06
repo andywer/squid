@@ -23,10 +23,15 @@ function escapeIdentifier(identifier: string) {
 }
 
 function objectEntries<T extends { [key: string]: Value }, Value = any>(
-  object: T
+  object: T,
+  filterUndefinedValues?: boolean
 ): Array<[string, Value]> {
   const keys = Object.keys(object)
-  return keys.map(key => [key, object[key]] as [string, Value])
+  const entries = keys.map(key => [key, object[key]] as [string, Value])
+
+  return filterUndefinedValues
+    ? entries.filter(([, columnValue]) => typeof columnValue !== "undefined")
+    : entries
 }
 
 function serializeSqlTemplateExpression(expression: any, nextParamID: number): QueryConfig {
@@ -171,7 +176,7 @@ function buildSpreadUpdateFragment(
  * const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadAnd(record: any): SqlSpecialExpressionValue {
-  const values = objectEntries<any>(record)
+  const values = objectEntries<any>(record, true)
   return {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {
@@ -186,7 +191,7 @@ export function spreadAnd(record: any): SqlSpecialExpressionValue {
  * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadInsert(record: any): SqlSpecialExpressionValue {
-  const insertionValues = objectEntries<any>(record)
+  const insertionValues = objectEntries<any>(record, true)
   return {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {
@@ -201,7 +206,7 @@ export function spreadInsert(record: any): SqlSpecialExpressionValue {
  * await database.query(sql`UPDATE users SET ${spreadUpdate({ name: "John", email: "john@example.com" })} WHERE id = 1`)
  */
 export function spreadUpdate(record: any): SqlSpecialExpressionValue {
-  const values = objectEntries<any>(record)
+  const values = objectEntries<any>(record, true)
   return {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {

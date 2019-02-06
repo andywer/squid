@@ -27,7 +27,8 @@ test("spreadAnd() works", t => {
     SELECT * FROM users WHERE ${spreadAnd({
       name: "Hugo",
       age: 20,
-      email: sql.raw("'foo@example.com'")
+      email: sql.raw("'foo@example.com'"),
+      foo: undefined
     })}
   `),
     dedentQueryConfig({
@@ -43,7 +44,8 @@ test("spreadInsert() works", t => {
     INSERT INTO users ${spreadInsert({
       name: "Hugo",
       age: 20,
-      created_at: sql.raw("NOW()")
+      created_at: sql.raw("NOW()"),
+      foo: undefined
     })} RETURNING *
   `),
     dedentQueryConfig({
@@ -59,7 +61,8 @@ test("spreadUpdate() works", t => {
     UPDATE users SET ${spreadUpdate({
       name: "Hugo",
       age: 20,
-      created_at: sql.raw("NOW()")
+      created_at: sql.raw("NOW()"),
+      foo: undefined
     })}
   `),
     dedentQueryConfig({

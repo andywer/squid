@@ -144,6 +144,25 @@ function buildSpreadInsertFragment(
   }
 }
 
+function buildSpreadUpdateFragment(
+  updateValues: Array<[string, any]>,
+  nextParamID: number
+): QueryConfig {
+  let values: any[] = []
+  const settersChain = updateValues
+    .map(([columnName, columnValue]) => {
+      const serialized = serializeSqlTemplateExpression(columnValue, nextParamID)
+      values = [...values, ...serialized.values]
+      nextParamID += serialized.values.length
+      return `${escapeIdentifier(columnName)} = ${serialized.text}`
+    })
+    .join(", ")
+  return {
+    text: `${settersChain}`,
+    values
+  }
+}
+
 /**
  * Convenience function to keep WHERE clauses concise. Takes an object:
  * Keys are supposed to be a column name, values the values that the record must have set.
@@ -172,6 +191,21 @@ export function spreadInsert(record: any): SqlSpecialExpressionValue {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {
       return buildSpreadInsertFragment(insertionValues, nextParamID)
+    }
+  }
+}
+
+/**
+ * Convenience function to keep UPDATE statements concise. Takes an object:
+ * @example
+ * await database.query(sql`UPDATE users SET ${spreadUpdate({ name: "John", email: "john@example.com" })} WHERE id = 1`)
+ */
+export function spreadUpdate(record: any): SqlSpecialExpressionValue {
+  const values = objectEntries<any>(record)
+  return {
+    type: $sqlExpressionValue,
+    buildFragment(nextParamID: number) {
+      return buildSpreadUpdateFragment(values, nextParamID)
     }
   }
 }

@@ -36,3 +36,9 @@ export declare function spreadAnd(record: any): SqlSpecialExpressionValue;
  * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
 export declare function spreadInsert(record: any): SqlSpecialExpressionValue;
+/**
+ * Convenience function to keep UPDATE statements concise. Takes an object:
+ * @example
+ * await database.query(sql`UPDATE users SET ${spreadUpdate({ name: "John", email: "john@example.com" })} WHERE id = 1`)
+ */
+export declare function spreadUpdate(record: any): SqlSpecialExpressionValue;

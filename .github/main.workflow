@@ -1,6 +1,6 @@
-workflow "Build, Test, and Publish" {
+workflow "Build, Test and maybe Publish" {
   on = "push"
-  resolves = ["Publish"]
+  resolves = ["Build", "Test", "Publish"]
 }
 
 # Filter for a new tag

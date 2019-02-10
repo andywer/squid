@@ -1,13 +1,26 @@
+############
+# Workflows
+
 workflow "Build, Test and maybe Publish" {
   on = "push"
-  resolves = ["Build", "Test", "Publish"]
+  resolves = ["Build", "Test", "Publish Latest", "Publish Testing"]
 }
 
-# Filter for a new tag
-action "Tag" {
+###########
+# Filters
+
+action "Production Version Tag" {
   uses = "actions/bin/filter@master"
-  args = "tag"
+  args = "tag v[0-9].[0-9].[0-9]"
 }
+
+action "Testing Version Tag" {
+  uses = "actions/bin/filter@master"
+  args = "tag *testing*"
+}
+
+##############
+# Build Steps
 
 action "Install" {
   uses = "actions/npm@master"
@@ -26,9 +39,16 @@ action "Test" {
   args = "test"
 }
 
-action "Publish" {
-  needs = ["Tag", "Build", "Test"]
+action "Publish Latest" {
+  needs = ["Production Version Tag", "Build", "Test"]
   uses = "actions/npm@master"
   args = "publish --access public"
+  secrets = ["NPM_AUTH_TOKEN"]
+}
+
+action "Publish Testing" {
+  needs = ["Testing Version Tag", "Build", "Test"]
+  uses = "actions/npm@master"
+  args = "publish --access public --tag testing"
   secrets = ["NPM_AUTH_TOKEN"]
 }

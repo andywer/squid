@@ -9,6 +9,9 @@ import {
 export { QueryConfig }
 
 type PgQueryConfig = QueryConfig
+interface ValueRecord<T = any> {
+  [key: string]: T
+}
 
 const debugQuery = createDebugLogger("squid:query")
 
@@ -22,7 +25,7 @@ function escapeIdentifier(identifier: string) {
   return `"${identifier}"`
 }
 
-function objectEntries<T extends { [key: string]: Value }, Value = any>(
+function objectEntries<T extends ValueRecord<Value>, Value = any>(
   object: T,
   filterUndefinedValues?: boolean
 ): Array<[string, Value]> {
@@ -128,21 +131,30 @@ function buildSpreadAndFragment(
 }
 
 function buildSpreadInsertFragment(
-  insertionValues: Array<[string, any]>,
+  columns: string[],
+  records: ValueRecord[],
   nextParamID: number
 ): QueryConfig {
   let values: any[] = []
   const text =
-    `(${insertionValues.map(([columnName]) => escapeIdentifier(columnName)).join(", ")})` +
+    `(${columns.map(columnName => escapeIdentifier(columnName)).join(", ")})` +
     ` VALUES ` +
-    `(${insertionValues
-      .map(([, columnValue]) => {
-        const serialized = serializeSqlTemplateExpression(columnValue, nextParamID)
-        values = [...values, ...serialized.values]
-        nextParamID += serialized.values.length
-        return serialized.text
+    `(${records
+      .map(record => {
+        return columns
+          .map(columnName => {
+            const columnValue = record[columnName]
+            if (typeof columnValue === "undefined") {
+              throw new TypeError(`Missing value for column "${columnName}"`)
+            }
+            const serialized = serializeSqlTemplateExpression(columnValue, nextParamID)
+            values = [...values, ...serialized.values]
+            nextParamID += serialized.values.length
+            return serialized.text
+          })
+          .join(", ")
       })
-      .join(", ")})`
+      .join("), (")})`
   return {
     text,
     values
@@ -169,6 +181,20 @@ function buildSpreadUpdateFragment(
 }
 
 /**
+ * Extract colum names from a records.
+ * Make sure all records has the same number of columns.
+ */
+function extractColumsName(records: ValueRecord[]) {
+  const referenceRecord = records[0]
+  if (records.some(record => Object.keys(record).length !== Object.keys(referenceRecord).length)) {
+    throw new Error("Rows must be of the same length")
+  }
+  return Object.keys(referenceRecord).filter(
+    columnName => typeof referenceRecord[columnName] !== "undefined"
+  )
+}
+
+/**
  * Convenience function to keep WHERE clauses concise. Takes an object:
  * Keys are supposed to be a column name, values the values that the record must have set.
  *
@@ -190,12 +216,12 @@ export function spreadAnd(record: any): SqlSpecialExpressionValue {
  * @example
  * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
-export function spreadInsert(record: any): SqlSpecialExpressionValue {
-  const insertionValues = objectEntries<any>(record, true)
+export function spreadInsert(...records: ValueRecord[]): SqlSpecialExpressionValue {
+  const colums = extractColumsName(records)
   return {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {
-      return buildSpreadInsertFragment(insertionValues, nextParamID)
+      return buildSpreadInsertFragment(colums, records, nextParamID)
     }
   }
 }

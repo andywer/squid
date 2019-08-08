@@ -55,6 +55,37 @@ test("spreadInsert() works", t => {
   )
 })
 
+test("spreadInsert() works with multiple inserts", t => {
+  t.deepEqual(
+    dedentQueryConfig(sql`
+    INSERT INTO users ${spreadInsert(
+      {
+        name: "Hugo",
+        age: 20,
+        created_at: sql.raw("NOW()"),
+        foo: undefined
+      },
+      {
+        age: 25,
+        name: "Jon",
+        foo: undefined,
+        created_at: sql.raw("NOW()")
+      },
+      {
+        bar: 1,
+        age: 27,
+        name: "Hans",
+        created_at: null
+      }
+    )} RETURNING *
+  `),
+    dedentQueryConfig({
+      text: `INSERT INTO users ("name", "age", "created_at") VALUES ($1, $2, NOW()), ($3, $4, NOW()), ($5, $6, $7) RETURNING *`,
+      values: ["Hugo", 20, "Jon", 25, "Hans", 27, null]
+    })
+  )
+})
+
 test("spreadUpdate() works", t => {
   t.deepEqual(
     dedentQueryConfig(sql`

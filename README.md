@@ -212,6 +212,18 @@ const users = await database.query(sql`
 // sql`INSERT INTO users ("name", "email") VALUES ('John', 'john@example.com')`
 ```
 
+```js
+const users = await database.query(sql`
+  INSERT INTO users ${spreadInsert(
+    { name: "John", email: "john@example.com" },
+    { name: "Travis", email: "travis@example.com" }
+  )}
+`)
+
+// same as:
+// sql`INSERT INTO users ("name", "email") VALUES ('John', 'john@example.com'), ('Travis', 'travis@example.com')`
+```
+
 ### spreadUpdate({ [columnName: string]: any })
 
 Spread INSERT VALUES to keep the query sweet and short without losing explicity.

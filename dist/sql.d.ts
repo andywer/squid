@@ -1,6 +1,9 @@
 import { QueryConfig, SqlSpecialExpressionValue } from "./internals";
 export { QueryConfig };
 declare type PgQueryConfig = QueryConfig;
+interface ValueRecord<T = any> {
+    [key: string]: T;
+}
 /**
  * SQL template string tag. Returns a query object: `{ text: string, values: any[] }`.
  * Template expressions are automatically SQL-injection-proofed unless wrapped in `sql.raw()`.
@@ -35,7 +38,7 @@ export declare function spreadAnd(record: any): SqlSpecialExpressionValue;
  * @example
  * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
-export declare function spreadInsert(record: any): SqlSpecialExpressionValue;
+export declare function spreadInsert(...records: ValueRecord[]): SqlSpecialExpressionValue;
 /**
  * Convenience function to keep UPDATE statements concise. Takes an object:
  * @example

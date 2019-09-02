@@ -5,9 +5,11 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
+    "prebuild": "rimraf dist/",
     "build": "tsc",
     "test": "ava",
-    "posttest": "prettier --list-different 'src/**' && tslint --project ."
+    "posttest": "prettier --list-different 'src/**' && tslint --project .",
+    "prepare": "npm run build"
   },
   "repository": "andywer/squid",
   "keywords": [
@@ -28,6 +30,7 @@
     "husky": "^1.2.1",
     "prettier": "^1.15.3",
     "pretty-quick": "^1.8.0",
+    "rimraf": "^3.0.0",
     "ts-node": "^7.0.1",
     "tslint": "^5.12.0",
     "tslint-config-prettier": "^1.17.0",

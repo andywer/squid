@@ -154,6 +154,28 @@ For convenience `squid/pg` also exposes all the database-agnostic schema exports
 import { defineTable, sql, spreadInsert, Schema, NewTableRow, TableRow } from "squid"
 ```
 
+## SQL injections
+
+All values passed into the tagged template string are automatically escaped to prevent SQL injections. You have to explicitly opt-out of this behavior by using `sql.raw()` in case you want to dynamically modify the query.
+
+The only attack vector left is forgetting to use the `sql` template tag. To rule out this potential source of error, there is also a way to explicitly escape a value passed to the template string: `sql.safe()`.
+
+An untagged template string using a value wrapped in `sql.safe()` will then result in an invalid query.
+
+```js
+// This is fine
+await database.query(sql`SELECT * FROM users LIMIT ${limit}`)
+
+// Results in the same query as the previous example
+await database.query(sql`SELECT * FROM users LIMIT ${sql.safe(limit)}`)
+
+// Forgot the tag - SQL injection possible!
+await database.query(`SELECT * FROM users LIMIT ${limit}`)
+
+// Forgot the tag - This line will now throw, no SQLi possible
+await database.query(`SELECT * FROM users LIMIT ${sql.safe(limit)}`)
+```
+
 ## API
 
 ### sql\`...\`
@@ -170,9 +192,10 @@ await database.query(sql`SELECT * FROM users LIMIT ${50}`)
 await database.query({ text: "SELECT * FROM users LIMIT $1", values: [limit])
 ```
 
-### sql.raw()
+### sql.raw(expression)
 
 Wrap your SQL template string values in this call to prevent escaping.
+Be careful, though. This is essentially an SQL injection prevention opt-out.
 
 Example:
 
@@ -181,6 +204,12 @@ await database.query(sql`
   UPDATE users SET last_login = ${loggingIn ? "NOW()" : "NULL"} WHERE id = ${userID}
 `)
 ```
+
+### sql.safe(value)
+
+Wraps a value in an object that just returns the (escaped) value.
+
+Use it if you want to make sure that a query lacking the `sql` template tag cannot be executed. Otherwise a missing template string tag might lead to SQL injections.
 
 ### spreadAnd({ [columnName: string]: any })
 

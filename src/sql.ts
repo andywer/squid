@@ -102,9 +102,22 @@ function rawExpression(rawValue: string): SqlSpecialExpressionValue {
   }
 }
 
-export { rawExpression as raw }
+function safeExpression<T>(value: T): SqlSpecialExpressionValue {
+  return {
+    type: $sqlExpressionValue,
+    buildFragment(paramID: number) {
+      return {
+        text: `\$${paramID}`,
+        values: [value]
+      }
+    }
+  }
+}
+
+export { rawExpression as raw, safeExpression as safe }
 
 sql.raw = rawExpression
+sql.safe = safeExpression
 
 function pushSqlParameter(nextParamID: number, parameterValues: any[], value: any) {
   parameterValues.push(value)

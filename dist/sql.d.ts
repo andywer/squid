@@ -18,13 +18,15 @@ interface ValueRecord<T = any> {
 export declare function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig;
 export declare namespace sql {
     var raw: typeof rawExpression;
+    var safe: typeof safeExpression;
 }
 /**
  * Wrap an SQL template expression value in `sql.raw()` to inject the raw value into the query.
  * Attention: Can easily lead to SQL injections! Use with caution and only if necessary.
  */
 declare function rawExpression(rawValue: string): SqlSpecialExpressionValue;
-export { rawExpression as raw };
+declare function safeExpression<T>(value: T): SqlSpecialExpressionValue;
+export { rawExpression as raw, safeExpression as safe };
 /**
  * Convenience function to keep WHERE clauses concise. Takes an object:
  * Keys are supposed to be a column name, values the values that the record must have set.

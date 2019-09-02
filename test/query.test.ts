@@ -14,6 +14,17 @@ test("sql template tag creates a valid postgres query", t => {
   })
 })
 
+test("sql.safe() works", t => {
+  t.deepEqual(sql`SELECT email FROM users WHERE id = ${sql.safe(1)}`, {
+    text: "SELECT email FROM users WHERE id = $1",
+    values: [1]
+  })
+  t.deepEqual(
+    `SELECT email FROM users WHERE id = ${sql.safe(1)}`,
+    `SELECT email FROM users WHERE id = [object Object]`
+  )
+})
+
 test("sql.raw() works", t => {
   t.deepEqual(sql`SELECT email FROM users WHERE id = ${sql.raw("1")}`, {
     text: "SELECT email FROM users WHERE id = 1",

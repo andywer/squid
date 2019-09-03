@@ -12,7 +12,7 @@ export declare enum ColumnType {
 interface ObjectShape {
     [propName: string]: ColumnDescription<any, any, any, any>;
 }
-interface ColumnDescription<Type extends ColumnType, SubType extends ColumnDescription<any, any, any, any>, EnumValues extends string | number, ObjectProps extends ObjectShape> {
+export interface ColumnDescription<Type extends ColumnType, SubType extends ColumnDescription<any, any, any, any>, EnumValues extends string | number, ObjectProps extends ObjectShape> {
     type: Type;
     subtype?: SubType;
     enum?: EnumValues[];

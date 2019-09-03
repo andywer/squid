@@ -16,7 +16,7 @@ interface ObjectShape {
   [propName: string]: ColumnDescription<any, any, any, any>
 }
 
-interface ColumnDescription<
+export interface ColumnDescription<
   Type extends ColumnType,
   SubType extends ColumnDescription<any, any, any, any>,
   EnumValues extends string | number,

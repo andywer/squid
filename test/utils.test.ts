@@ -1,5 +1,5 @@
 import test from "ava"
-import { escapeIdentifier, mergeLists, objectEntries } from "../src/utils"
+import { escapeIdentifier, filterUndefined, mergeLists } from "../src/utils"
 
 test("escapeIdentifier wraps in quotes", t => {
   t.is(escapeIdentifier("column"), '"column"')
@@ -30,10 +30,6 @@ test("mergeLists works on lists of different lengths", t => {
   t.deepEqual(mergeLists([1, 2, 3, 4, 5], [6, 7, 8]), [1, 6, 2, 7, 3, 8, 4, 5])
 })
 
-test("objectEntries lists out object entries", t => {
-  t.deepEqual(objectEntries({ a: 1, b: 2 }), [["a", 1], ["b", 2]])
-})
-
-test("objectEntries filters out undefineds", t => {
-  t.deepEqual(objectEntries({ a: 1, b: undefined }), [["a", 1]])
+test("filterUndefined filters out undefined keys", t => {
+  t.deepEqual(filterUndefined({ a: 1, b: undefined }), { a: 1 })
 })

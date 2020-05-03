@@ -1,5 +1,5 @@
 import createDebugLogger from "debug"
-import { escapeIdentifier, mergeLists, objectEntries } from "../utils"
+import { escapeIdentifier, filterUndefined, mergeLists } from "../utils"
 import { QueryConfig } from "./config"
 import {
   SqlBuilder,
@@ -91,7 +91,7 @@ function extractColumnsName(records: ValueRecord[]) {
  * const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadAnd<T>(record: any): SqlBuilder<T> {
-  const columnValues = objectEntries(record)
+  const columnValues = Object.entries(filterUndefined(record))
 
   return mkSqlBuilder(nextParamID => {
     let values: any[] = []
@@ -152,7 +152,7 @@ export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
  * await database.query(sql`UPDATE users SET ${spreadUpdate({ name: "John", email: "john@example.com" })} WHERE id = 1`)
  */
 export function spreadUpdate(record: any): SqlBuilder {
-  const updateValues = objectEntries(record)
+  const updateValues = Object.entries(filterUndefined(record))
 
   return mkSqlBuilder(nextParamID => {
     let values: any[] = []

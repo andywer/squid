@@ -104,34 +104,18 @@ export function spreadAnd<T>(record: any): SqlBuilder<T> {
  * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
-  const columns = extractKeys(records.map(filterUndefined))
+  const columnNames = extractKeys(records.map(filterUndefined))
 
-  return mkSqlBuilder(nextParamID => {
-    let values: any[] = []
-    const text =
-      `(${columns.map(columnName => escapeIdentifier(columnName)).join(", ")})` +
-      ` VALUES ` +
-      `(${records
-        .map(record => {
-          return columns
-            .map(columnName => {
-              const columnValue = record[columnName]
-              if (typeof columnValue === "undefined") {
-                throw new TypeError(`Missing value for column "${columnName}"`)
-              }
-              const serialized = buildSql(columnValue, nextParamID)
-              values = [...values, ...serialized.values]
-              nextParamID += serialized.values.length
-              return serialized.text
-            })
-            .join(", ")
-        })
-        .join("), (")})`
-    return {
-      text,
-      values
-    }
+  // `("column1", "column2", ...) VALUES `
+  const identifiers = columnNames.map(escapeIdentifier)
+  const prefix = `(${identifiers.join(", ")}) VALUES `
+
+  const insertChainBuilders = records.map(record => {
+    const recordColumns = columnNames.map(columnName => toSqlBuilder(record[columnName]))
+    return transformSql(joinSql(recordColumns, ", "), text => `(${text})`)
   })
+
+  return transformSql(joinSql(insertChainBuilders, ", "), text => prefix + text)
 }
 
 /**

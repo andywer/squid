@@ -46,3 +46,44 @@ export function mergeLists<T>(list1: ReadonlyArray<T>, list2: ReadonlyArray<T>):
 
   return result
 }
+
+function objectKeys(object: object): Set<string> {
+  return new Set(Object.keys(object))
+}
+
+function areSetsEqual<T>(set1: Set<T>, set2: Set<T>): boolean {
+  const difference = new Set(set1)
+  for (const elem of set2) {
+    if (difference.has(elem)) {
+      difference.delete(elem)
+    } else {
+      // FIXME: uncommenting this causes change in behavior, where spreadInsert()
+      // currently allows extra keys to be specified in latter objects that will
+      // be ignored
+      // return false
+    }
+  }
+
+  return difference.size === 0
+}
+
+/**
+ * Get the keys from the given list of objects. Checks that the objects all
+ * have the same keys.
+ */
+export function extractKeys<Value = any>(objects: Array<ValueRecord<Value>>): string[] {
+  if (objects.length === 0) {
+    throw new Error("Cannot call extractKeys on empty list")
+  }
+
+  const keys = objectKeys(objects[0])
+
+  for (const o of objects) {
+    const oKeys = objectKeys(o)
+    if (!areSetsEqual(keys, oKeys)) {
+      throw new Error(`Objects have different keys: ${JSON.stringify(objects)}`)
+    }
+  }
+
+  return Array.from(keys)
+}

@@ -1,5 +1,5 @@
 import createDebugLogger from "debug"
-import { escapeIdentifier, filterUndefined, mergeLists } from "../utils"
+import { escapeIdentifier, extractKeys, filterUndefined, mergeLists } from "../utils"
 import { QueryConfig } from "./config"
 import {
   SqlBuilder,
@@ -70,20 +70,6 @@ sql.raw = rawExpression
 sql.safe = safeExpression
 
 /**
- * Extract column names from a records.
- * Make sure all records has the same number of columns.
- */
-function extractColumnsName(records: ValueRecord[]) {
-  const referenceRecord = records[0]
-  if (records.some(record => Object.keys(record).length !== Object.keys(referenceRecord).length)) {
-    throw new Error("Rows must be of the same length")
-  }
-  return Object.keys(referenceRecord).filter(
-    columnName => typeof referenceRecord[columnName] !== "undefined"
-  )
-}
-
-/**
  * Convenience function to keep WHERE clauses concise. Takes an object:
  * Keys are supposed to be a column name, values the values that the record must have set.
  *
@@ -116,7 +102,7 @@ export function spreadAnd<T>(record: any): SqlBuilder<T> {
  * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
-  const columns = extractColumnsName(records)
+  const columns = extractKeys(records.map(filterUndefined))
 
   return mkSqlBuilder(nextParamID => {
     let values: any[] = []

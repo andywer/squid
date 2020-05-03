@@ -4,10 +4,12 @@ import { QueryConfig } from "./config"
 import {
   SqlBuilder,
   buildSql,
+  joinSql,
   mkSqlBuilder,
   isSqlBuilder,
   paramSqlBuilder,
-  rawSqlBuilder
+  rawSqlBuilder,
+  toSqlBuilder
 } from "./builder"
 
 export { QueryConfig, SqlBuilder }
@@ -31,22 +33,28 @@ const debugQuery = createDebugLogger("squid:query")
  * `)
  */
 export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig {
-  const parameterValues: any[] = []
+  // General idea:
+  //   sql`foo ${1} bar ${sql.raw(2)}`
+  // =>
+  //   sql(['foo ', ' bar ', ''], [1, rawSqlBuilder(2)])
+  // =>
+  //   [rawSqlBuilder('foo '), rawSqlBuilder(' bar '), rawSqlBuilder('')]
+  //   [paramSqlBuilder(1), rawSqlBuilder(2)]
+  // =>
+  //   [
+  //     rawSqlBuilder('foo '),
+  //     paramSqlBuilder(1),
+  //     rawSqlBuilder(' bar '),
+  //     rawSqlBuilder(2),
+  //     rawSqlBuilder(''),
+  //   ]
 
-  const serializedValues = values.map(expression => {
-    const nextParamID = parameterValues.length + 1
+  const textSqlBuilders = texts.map(rawSqlBuilder)
+  const valueSqlBuilders = values.map(toSqlBuilder)
 
-    const serialized = buildSql(expression, nextParamID)
+  const sqlBuilders = mergeLists(textSqlBuilders, valueSqlBuilders)
 
-    parameterValues.push(...serialized.values)
-
-    return serialized.text
-  })
-
-  const query = {
-    text: mergeLists(texts, serializedValues).join(""),
-    values: parameterValues
-  }
+  const query = joinSql(sqlBuilders).buildFragment(1)
 
   debugQuery(query)
   return query

@@ -21,12 +21,42 @@ export function isSqlBuilder(builder: any): builder is SqlBuilder {
 }
 
 /**
+ * Merge the given SqlBuilders, concatenating the text values and parametrized
+ * values.
+ */
+export function joinSql(builders: SqlBuilder[]): SqlBuilder {
+  return mkSqlBuilder(nextParamID => {
+    let paramID = nextParamID
+    const builtText: string[] = []
+    const builtValues: any[] = []
+
+    builders.forEach(builder => {
+      const { text, values } = builder.buildFragment(paramID)
+      paramID += values.length
+      builtText.push(text)
+      builtValues.push(...values)
+    })
+
+    return {
+      text: builtText.join(""),
+      values: builtValues
+    }
+  })
+}
+
+/**
+ * Convert the given value to a SqlBuilder if it's not already.
+ */
+export function toSqlBuilder<T>(value: SqlBuilder<T> | T): SqlBuilder<T> {
+  return isSqlBuilder(value) ? value : paramSqlBuilder(value)
+}
+
+/**
  * Build the given value. If it's a SqlBuilder, run buildFragment, otherwise
  * build it as a SQL parameter.
  */
 export function buildSql<T>(value: SqlBuilder<T> | T, nextParamID: number): QueryConfig<T> {
-  const builder = isSqlBuilder(value) ? value : paramSqlBuilder(value)
-  return builder.buildFragment(nextParamID)
+  return toSqlBuilder(value).buildFragment(nextParamID)
 }
 
 /**

@@ -64,18 +64,17 @@ function serializeSqlTemplateExpression(expression: any, nextParamID: number): Q
  * `)
  */
 export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig {
-  const serializedValues: string[] = []
   const parameterValues: any[] = []
 
-  for (let valueIndex = 0; valueIndex < values.length; valueIndex++) {
-    const expression = values[valueIndex]
+  const serializedValues = values.map(expression => {
     const nextParamID = parameterValues.length + 1
 
     const serialized = serializeSqlTemplateExpression(expression, nextParamID)
 
-    serializedValues.push(serialized.text)
     parameterValues.push(...serialized.values)
-  }
+
+    return serialized.text
+  })
 
   const query = {
     text: mergeLists(texts, serializedValues).join(""),

@@ -5,6 +5,7 @@ import {
   QueryConfig,
   SqlSpecialExpressionValue
 } from "./internals"
+import { escapeIdentifier, mergeLists, objectEntries } from "./utils"
 
 export { QueryConfig }
 
@@ -14,28 +15,6 @@ interface ValueRecord<T = any> {
 }
 
 const debugQuery = createDebugLogger("squid:query")
-
-function escapeIdentifier(identifier: string) {
-  if (identifier.charAt(0) === '"' && identifier.charAt(identifier.length - 1) === '"') {
-    identifier = identifier.substr(1, identifier.length - 2)
-  }
-  if (identifier.includes('"')) {
-    throw new Error(`Invalid identifier: ${identifier}`)
-  }
-  return `"${identifier}"`
-}
-
-function objectEntries<T extends ValueRecord<Value>, Value = any>(
-  object: T,
-  filterUndefinedValues?: boolean
-): Array<[string, Value]> {
-  const keys = Object.keys(object)
-  const entries = keys.map(key => [key, object[key]] as [string, Value])
-
-  return filterUndefinedValues
-    ? entries.filter(([, columnValue]) => typeof columnValue !== "undefined")
-    : entries
-}
 
 function serializeSqlTemplateExpression(expression: any, nextParamID: number): QueryConfig {
   const values: any[] = []
@@ -63,22 +42,20 @@ function serializeSqlTemplateExpression(expression: any, nextParamID: number): Q
  * `)
  */
 export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig {
-  let parameterValues: any[] = []
-  let resultingSqlQuery = texts[0]
+  const parameterValues: any[] = []
 
-  for (let valueIndex = 0; valueIndex < values.length; valueIndex++) {
-    const expression = values[valueIndex]
-    const followingSqlText = texts[valueIndex + 1] as string | undefined
+  const serializedValues = values.map(expression => {
     const nextParamID = parameterValues.length + 1
 
     const serialized = serializeSqlTemplateExpression(expression, nextParamID)
-    resultingSqlQuery += serialized.text + (followingSqlText || "")
 
-    parameterValues = [...parameterValues, ...serialized.values]
-  }
+    parameterValues.push(...serialized.values)
+
+    return serialized.text
+  })
 
   const query = {
-    text: resultingSqlQuery,
+    text: mergeLists(texts, serializedValues).join(""),
     values: parameterValues
   }
 
@@ -215,7 +192,7 @@ function extractColumsName(records: ValueRecord[]) {
  * const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadAnd(record: any): SqlSpecialExpressionValue {
-  const values = objectEntries<any>(record, true)
+  const values = objectEntries(record)
   return {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {
@@ -245,7 +222,7 @@ export function spreadInsert(...records: ValueRecord[]): SqlSpecialExpressionVal
  * await database.query(sql`UPDATE users SET ${spreadUpdate({ name: "John", email: "john@example.com" })} WHERE id = 1`)
  */
 export function spreadUpdate(record: any): SqlSpecialExpressionValue {
-  const values = objectEntries<any>(record, true)
+  const values = objectEntries(record)
   return {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {

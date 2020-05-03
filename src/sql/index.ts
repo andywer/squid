@@ -1,11 +1,11 @@
 import createDebugLogger from "debug"
+import { escapeIdentifier, mergeLists, objectEntries } from "../utils"
 import {
   $sqlExpressionValue,
   isSpecialExpression,
   QueryConfig,
   SqlSpecialExpressionValue
 } from "./internals"
-import { escapeIdentifier, mergeLists, objectEntries } from "./utils"
 
 export { QueryConfig }
 

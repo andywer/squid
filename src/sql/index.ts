@@ -1,13 +1,16 @@
 import createDebugLogger from "debug"
 import { escapeIdentifier, mergeLists, objectEntries } from "../utils"
+import { QueryConfig } from "./config"
 import {
-  $sqlExpressionValue,
-  isSpecialExpression,
-  QueryConfig,
-  SqlSpecialExpressionValue
-} from "./internals"
+  SqlBuilder,
+  buildSql,
+  mkSqlBuilder,
+  isSqlBuilder,
+  paramSqlBuilder,
+  rawSqlBuilder
+} from "./builder"
 
-export { QueryConfig }
+export { QueryConfig, SqlBuilder }
 
 type PgQueryConfig = QueryConfig
 interface ValueRecord<T = any> {
@@ -15,20 +18,6 @@ interface ValueRecord<T = any> {
 }
 
 const debugQuery = createDebugLogger("squid:query")
-
-function serializeSqlTemplateExpression(expression: any, nextParamID: number): QueryConfig {
-  const values: any[] = []
-
-  if (isSpecialExpression(expression)) {
-    return expression.buildFragment(nextParamID)
-  } else {
-    const text = pushSqlParameter(nextParamID, values, expression)
-    return {
-      text,
-      values
-    }
-  }
-}
 
 /**
  * SQL template string tag. Returns a query object: `{ text: string, values: any[] }`.
@@ -47,7 +36,7 @@ export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfi
   const serializedValues = values.map(expression => {
     const nextParamID = parameterValues.length + 1
 
-    const serialized = serializeSqlTemplateExpression(expression, nextParamID)
+    const serialized = buildSql(expression, nextParamID)
 
     parameterValues.push(...serialized.values)
 
@@ -67,39 +56,18 @@ export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfi
  * Wrap an SQL template expression value in `sql.raw()` to inject the raw value into the query.
  * Attention: Can easily lead to SQL injections! Use with caution and only if necessary.
  */
-function rawExpression(rawValue: string): SqlSpecialExpressionValue {
-  return {
-    type: $sqlExpressionValue,
-    buildFragment() {
-      return {
-        text: rawValue,
-        values: []
-      }
-    }
-  }
+function rawExpression(rawValue: string): SqlBuilder {
+  return rawSqlBuilder(rawValue)
 }
 
-function safeExpression<T>(value: T): SqlSpecialExpressionValue {
-  return {
-    type: $sqlExpressionValue,
-    buildFragment(paramID: number) {
-      return {
-        text: `\$${paramID}`,
-        values: [value]
-      }
-    }
-  }
+function safeExpression<T>(value: T): SqlBuilder<T> {
+  return paramSqlBuilder(value)
 }
 
 export { rawExpression as raw, safeExpression as safe }
 
 sql.raw = rawExpression
 sql.safe = safeExpression
-
-function pushSqlParameter(nextParamID: number, parameterValues: any[], value: any) {
-  parameterValues.push(value)
-  return `\$${nextParamID}`
-}
 
 function buildSpreadAndFragment(
   columnValues: Array<[string, any]>,
@@ -108,7 +76,7 @@ function buildSpreadAndFragment(
   let values: any[] = []
   const andChain = columnValues
     .map(([columnName, columnValue]) => {
-      const serialized = serializeSqlTemplateExpression(columnValue, nextParamID)
+      const serialized = buildSql(columnValue, nextParamID)
       values = [...values, ...serialized.values]
       nextParamID += serialized.values.length
       return `${escapeIdentifier(columnName)} = ${serialized.text}`
@@ -137,7 +105,7 @@ function buildSpreadInsertFragment(
             if (typeof columnValue === "undefined") {
               throw new TypeError(`Missing value for column "${columnName}"`)
             }
-            const serialized = serializeSqlTemplateExpression(columnValue, nextParamID)
+            const serialized = buildSql(columnValue, nextParamID)
             values = [...values, ...serialized.values]
             nextParamID += serialized.values.length
             return serialized.text
@@ -158,7 +126,7 @@ function buildSpreadUpdateFragment(
   let values: any[] = []
   const settersChain = updateValues
     .map(([columnName, columnValue]) => {
-      const serialized = serializeSqlTemplateExpression(columnValue, nextParamID)
+      const serialized = buildSql(columnValue, nextParamID)
       values = [...values, ...serialized.values]
       nextParamID += serialized.values.length
       return `${escapeIdentifier(columnName)} = ${serialized.text}`
@@ -191,14 +159,10 @@ function extractColumsName(records: ValueRecord[]) {
  * @example
  * const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
  */
-export function spreadAnd(record: any): SqlSpecialExpressionValue {
+export function spreadAnd<T>(record: any): SqlBuilder<T> {
   const values = objectEntries(record)
-  return {
-    type: $sqlExpressionValue,
-    buildFragment(nextParamID: number) {
-      return buildSpreadAndFragment(values, nextParamID)
-    }
-  }
+
+  return mkSqlBuilder(nextParamID => buildSpreadAndFragment(values, nextParamID))
 }
 
 /**
@@ -206,14 +170,10 @@ export function spreadAnd(record: any): SqlSpecialExpressionValue {
  * @example
  * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
-export function spreadInsert(...records: ValueRecord[]): SqlSpecialExpressionValue {
+export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
   const colums = extractColumsName(records)
-  return {
-    type: $sqlExpressionValue,
-    buildFragment(nextParamID: number) {
-      return buildSpreadInsertFragment(colums, records, nextParamID)
-    }
-  }
+
+  return mkSqlBuilder(nextParamID => buildSpreadInsertFragment(colums, records, nextParamID))
 }
 
 /**
@@ -221,12 +181,8 @@ export function spreadInsert(...records: ValueRecord[]): SqlSpecialExpressionVal
  * @example
  * await database.query(sql`UPDATE users SET ${spreadUpdate({ name: "John", email: "john@example.com" })} WHERE id = 1`)
  */
-export function spreadUpdate(record: any): SqlSpecialExpressionValue {
+export function spreadUpdate(record: any): SqlBuilder {
   const values = objectEntries(record)
-  return {
-    type: $sqlExpressionValue,
-    buildFragment(nextParamID: number) {
-      return buildSpreadUpdateFragment(values, nextParamID)
-    }
-  }
+
+  return mkSqlBuilder(nextParamID => buildSpreadUpdateFragment(values, nextParamID))
 }

@@ -69,75 +69,6 @@ export { rawExpression as raw, safeExpression as safe }
 sql.raw = rawExpression
 sql.safe = safeExpression
 
-function buildSpreadAndFragment(
-  columnValues: Array<[string, any]>,
-  nextParamID: number
-): QueryConfig {
-  let values: any[] = []
-  const andChain = columnValues
-    .map(([columnName, columnValue]) => {
-      const serialized = buildSql(columnValue, nextParamID)
-      values = [...values, ...serialized.values]
-      nextParamID += serialized.values.length
-      return `${escapeIdentifier(columnName)} = ${serialized.text}`
-    })
-    .join(" AND ")
-  return {
-    text: `(${andChain})`,
-    values
-  }
-}
-
-function buildSpreadInsertFragment(
-  columns: string[],
-  records: ValueRecord[],
-  nextParamID: number
-): QueryConfig {
-  let values: any[] = []
-  const text =
-    `(${columns.map(columnName => escapeIdentifier(columnName)).join(", ")})` +
-    ` VALUES ` +
-    `(${records
-      .map(record => {
-        return columns
-          .map(columnName => {
-            const columnValue = record[columnName]
-            if (typeof columnValue === "undefined") {
-              throw new TypeError(`Missing value for column "${columnName}"`)
-            }
-            const serialized = buildSql(columnValue, nextParamID)
-            values = [...values, ...serialized.values]
-            nextParamID += serialized.values.length
-            return serialized.text
-          })
-          .join(", ")
-      })
-      .join("), (")})`
-  return {
-    text,
-    values
-  }
-}
-
-function buildSpreadUpdateFragment(
-  updateValues: Array<[string, any]>,
-  nextParamID: number
-): QueryConfig {
-  let values: any[] = []
-  const settersChain = updateValues
-    .map(([columnName, columnValue]) => {
-      const serialized = buildSql(columnValue, nextParamID)
-      values = [...values, ...serialized.values]
-      nextParamID += serialized.values.length
-      return `${escapeIdentifier(columnName)} = ${serialized.text}`
-    })
-    .join(", ")
-  return {
-    text: `${settersChain}`,
-    values
-  }
-}
-
 /**
  * Extract column names from a records.
  * Make sure all records has the same number of columns.
@@ -162,7 +93,21 @@ function extractColumnsName(records: ValueRecord[]) {
 export function spreadAnd<T>(record: any): SqlBuilder<T> {
   const columnValues = objectEntries(record)
 
-  return mkSqlBuilder(nextParamID => buildSpreadAndFragment(columnValues, nextParamID))
+  return mkSqlBuilder(nextParamID => {
+    let values: any[] = []
+    const andChain = columnValues
+      .map(([columnName, columnValue]) => {
+        const serialized = buildSql(columnValue, nextParamID)
+        values = [...values, ...serialized.values]
+        nextParamID += serialized.values.length
+        return `${escapeIdentifier(columnName)} = ${serialized.text}`
+      })
+      .join(" AND ")
+    return {
+      text: `(${andChain})`,
+      values
+    }
+  })
 }
 
 /**
@@ -173,7 +118,32 @@ export function spreadAnd<T>(record: any): SqlBuilder<T> {
 export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
   const columns = extractColumnsName(records)
 
-  return mkSqlBuilder(nextParamID => buildSpreadInsertFragment(columns, records, nextParamID))
+  return mkSqlBuilder(nextParamID => {
+    let values: any[] = []
+    const text =
+      `(${columns.map(columnName => escapeIdentifier(columnName)).join(", ")})` +
+      ` VALUES ` +
+      `(${records
+        .map(record => {
+          return columns
+            .map(columnName => {
+              const columnValue = record[columnName]
+              if (typeof columnValue === "undefined") {
+                throw new TypeError(`Missing value for column "${columnName}"`)
+              }
+              const serialized = buildSql(columnValue, nextParamID)
+              values = [...values, ...serialized.values]
+              nextParamID += serialized.values.length
+              return serialized.text
+            })
+            .join(", ")
+        })
+        .join("), (")})`
+    return {
+      text,
+      values
+    }
+  })
 }
 
 /**
@@ -184,5 +154,19 @@ export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
 export function spreadUpdate(record: any): SqlBuilder {
   const updateValues = objectEntries(record)
 
-  return mkSqlBuilder(nextParamID => buildSpreadUpdateFragment(updateValues, nextParamID))
+  return mkSqlBuilder(nextParamID => {
+    let values: any[] = []
+    const settersChain = updateValues
+      .map(([columnName, columnValue]) => {
+        const serialized = buildSql(columnValue, nextParamID)
+        values = [...values, ...serialized.values]
+        nextParamID += serialized.values.length
+        return `${escapeIdentifier(columnName)} = ${serialized.text}`
+      })
+      .join(", ")
+    return {
+      text: `${settersChain}`,
+      values
+    }
+  })
 }

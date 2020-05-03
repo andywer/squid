@@ -160,9 +160,9 @@ function extractColumnsName(records: ValueRecord[]) {
  * const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadAnd<T>(record: any): SqlBuilder<T> {
-  const values = objectEntries(record)
+  const columnValues = objectEntries(record)
 
-  return mkSqlBuilder(nextParamID => buildSpreadAndFragment(values, nextParamID))
+  return mkSqlBuilder(nextParamID => buildSpreadAndFragment(columnValues, nextParamID))
 }
 
 /**
@@ -182,7 +182,7 @@ export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
  * await database.query(sql`UPDATE users SET ${spreadUpdate({ name: "John", email: "john@example.com" })} WHERE id = 1`)
  */
 export function spreadUpdate(record: any): SqlBuilder {
-  const values = objectEntries(record)
+  const updateValues = objectEntries(record)
 
-  return mkSqlBuilder(nextParamID => buildSpreadUpdateFragment(values, nextParamID))
+  return mkSqlBuilder(nextParamID => buildSpreadUpdateFragment(updateValues, nextParamID))
 }

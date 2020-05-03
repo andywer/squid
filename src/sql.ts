@@ -5,7 +5,7 @@ import {
   QueryConfig,
   SqlSpecialExpressionValue
 } from "./internals"
-import { mergeLists } from "./utils"
+import { escapeIdentifier, mergeLists, objectEntries } from "./utils"
 
 export { QueryConfig }
 
@@ -15,28 +15,6 @@ interface ValueRecord<T = any> {
 }
 
 const debugQuery = createDebugLogger("squid:query")
-
-function escapeIdentifier(identifier: string) {
-  if (identifier.charAt(0) === '"' && identifier.charAt(identifier.length - 1) === '"') {
-    identifier = identifier.substr(1, identifier.length - 2)
-  }
-  if (identifier.includes('"')) {
-    throw new Error(`Invalid identifier: ${identifier}`)
-  }
-  return `"${identifier}"`
-}
-
-function objectEntries<T extends ValueRecord<Value>, Value = any>(
-  object: T,
-  filterUndefinedValues?: boolean
-): Array<[string, Value]> {
-  const keys = Object.keys(object)
-  const entries = keys.map(key => [key, object[key]] as [string, Value])
-
-  return filterUndefinedValues
-    ? entries.filter(([, columnValue]) => typeof columnValue !== "undefined")
-    : entries
-}
 
 function serializeSqlTemplateExpression(expression: any, nextParamID: number): QueryConfig {
   const values: any[] = []

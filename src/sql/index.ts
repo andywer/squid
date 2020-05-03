@@ -139,10 +139,10 @@ function buildSpreadUpdateFragment(
 }
 
 /**
- * Extract colum names from a records.
+ * Extract column names from a records.
  * Make sure all records has the same number of columns.
  */
-function extractColumsName(records: ValueRecord[]) {
+function extractColumnsName(records: ValueRecord[]) {
   const referenceRecord = records[0]
   if (records.some(record => Object.keys(record).length !== Object.keys(referenceRecord).length)) {
     throw new Error("Rows must be of the same length")
@@ -171,9 +171,9 @@ export function spreadAnd<T>(record: any): SqlBuilder<T> {
  * await database.query(sql`INSERT INTO users ${spreadInsert({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
-  const colums = extractColumsName(records)
+  const columns = extractColumnsName(records)
 
-  return mkSqlBuilder(nextParamID => buildSpreadInsertFragment(colums, records, nextParamID))
+  return mkSqlBuilder(nextParamID => buildSpreadInsertFragment(columns, records, nextParamID))
 }
 
 /**

@@ -63,7 +63,7 @@ function serializeSqlTemplateExpression(expression: any, nextParamID: number): Q
  * `)
  */
 export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig {
-  let parameterValues: any[] = []
+  const parameterValues: any[] = []
   let resultingSqlQuery = texts[0]
 
   for (let valueIndex = 0; valueIndex < values.length; valueIndex++) {
@@ -74,7 +74,7 @@ export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfi
     const serialized = serializeSqlTemplateExpression(expression, nextParamID)
     resultingSqlQuery += serialized.text + (followingSqlText || "")
 
-    parameterValues = [...parameterValues, ...serialized.values]
+    parameterValues.push(...serialized.values)
   }
 
   const query = {

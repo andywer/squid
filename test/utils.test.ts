@@ -35,5 +35,5 @@ test("objectEntries lists out object entries", t => {
 })
 
 test("objectEntries filters out undefineds", t => {
-  t.deepEqual(objectEntries({ a: 1, b: undefined }, true), [["a", 1]])
+  t.deepEqual(objectEntries({ a: 1, b: undefined }), [["a", 1]])
 })

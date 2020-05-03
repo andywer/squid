@@ -192,7 +192,7 @@ function extractColumsName(records: ValueRecord[]) {
  * const { rows } = await database.query(sql`SELECT * FROM users WHERE ${spreadAnd({ name: "John", email: "john@example.com" })}`)
  */
 export function spreadAnd(record: any): SqlSpecialExpressionValue {
-  const values = objectEntries<any>(record, true)
+  const values = objectEntries(record)
   return {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {
@@ -222,7 +222,7 @@ export function spreadInsert(...records: ValueRecord[]): SqlSpecialExpressionVal
  * await database.query(sql`UPDATE users SET ${spreadUpdate({ name: "John", email: "john@example.com" })} WHERE id = 1`)
  */
 export function spreadUpdate(record: any): SqlSpecialExpressionValue {
-  const values = objectEntries<any>(record, true)
+  const values = objectEntries(record)
   return {
     type: $sqlExpressionValue,
     buildFragment(nextParamID: number) {

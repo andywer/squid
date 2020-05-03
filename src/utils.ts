@@ -14,18 +14,10 @@ export function escapeIdentifier(identifier: string) {
 export type ValueRecord<T = any> = Record<string, T>
 
 /**
- * Get the entries of the given object, optionally filtering out undefined values.
+ * Get the entries of the given object, filtering out undefined values.
  */
-export function objectEntries<Value = any>(
-  object: ValueRecord<Value>,
-  filterUndefinedValues?: boolean
-): Array<[string, Value]> {
-  const keys = Object.keys(object)
-  const entries = keys.map(key => [key, object[key]] as [string, Value])
-
-  return filterUndefinedValues
-    ? entries.filter(([, columnValue]) => typeof columnValue !== "undefined")
-    : entries
+export function objectEntries<Value = any>(object: ValueRecord<Value>): Array<[string, Value]> {
+  return Object.entries(object).filter(([_, v]) => v !== undefined)
 }
 
 /**

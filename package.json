@@ -8,6 +8,7 @@
     "prebuild": "rimraf dist/",
     "build": "tsc",
     "test": "ava",
+    "test:e2e": "ava --config ava.e2e-config.js",
     "posttest": "prettier --list-different 'src/**' && tslint --project .",
     "prepare": "npm run build"
   },
@@ -28,6 +29,7 @@
     "ava": "^2.3.0",
     "dedent": "^0.7.0",
     "husky": "^1.2.1",
+    "pg": "^8.0.3",
     "prettier": "^1.15.3",
     "pretty-quick": "^1.8.0",
     "rimraf": "^3.0.0",

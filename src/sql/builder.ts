@@ -23,8 +23,25 @@ export function isSqlBuilder(builder: any): builder is SqlBuilder {
 /**
  * Merge the given SqlBuilders, concatenating the text values and parametrized
  * values.
+ *
+ * @example
+ * const builder = joinSql([rawSqlBuilder("foo = "), paramSqlBuilder("bar")])
+ * builder.buildFragment(1) ==> {
+ *   text: "foo = $1",
+ *   values: ["bar"]
+ * }
+ *
+ * @example
+ * const builder = joinSql(
+ *   [rawSqlBuilder("foo"), paramSqlBuilder("bar")]
+ *   " = "
+ * )
+ * builder.buildFragment(1) ==> {
+ *   text: "foo = $1",
+ *   values: ["bar"]
+ * }
  */
-export function joinSql(builders: SqlBuilder[]): SqlBuilder {
+export function joinSql(builders: SqlBuilder[], delimiter = ""): SqlBuilder {
   return mkSqlBuilder(nextParamID => {
     let paramID = nextParamID
     const builtText: string[] = []
@@ -38,8 +55,28 @@ export function joinSql(builders: SqlBuilder[]): SqlBuilder {
     })
 
     return {
-      text: builtText.join(""),
+      text: builtText.join(delimiter),
       values: builtValues
+    }
+  })
+}
+
+/**
+ * Transform the text content in the given SqlBuilder.
+ *
+ * @example
+ * const builder = transformSql(paramSqlBuilder("hello"), text => `(${text})`)
+ * builder.buildFragment(1) ==> {
+ *   text: "($1)",
+ *   values: [value]
+ * }
+ */
+export function transformSql(builder: SqlBuilder, callback: (text: string) => string): SqlBuilder {
+  return mkSqlBuilder(nextParamID => {
+    const { text, values } = builder.buildFragment(nextParamID)
+    return {
+      text: callback(text),
+      values
     }
   })
 }
@@ -61,6 +98,12 @@ export function buildSql<T>(value: SqlBuilder<T> | T, nextParamID: number): Quer
 
 /**
  * A SqlBuilder that renders the given value directly.
+ *
+ * @example
+ * rawSqlBuilder("hello").buildFragment(1) ==> {
+ *   text: "hello",
+ *   values: []
+ * }
  */
 export function rawSqlBuilder(value: string): SqlBuilder<string> {
   return mkSqlBuilder(() => ({
@@ -71,6 +114,12 @@ export function rawSqlBuilder(value: string): SqlBuilder<string> {
 
 /**
  * A SqlBuilder that marks the given value to be parametrized.
+ *
+ * @example
+ * paramSqlBuilder("hello").buildFragment(1) ==> {
+ *   text: "$1",
+ *   values: ["hello"]
+ * }
  */
 export function paramSqlBuilder<T>(value: T): SqlBuilder<T> {
   return mkSqlBuilder(nextParamID => ({

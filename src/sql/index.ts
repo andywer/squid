@@ -9,7 +9,8 @@ import {
   isSqlBuilder,
   paramSqlBuilder,
   rawSqlBuilder,
-  toSqlBuilder
+  toSqlBuilder,
+  transformSql
 } from "./builder"
 
 export { QueryConfig, SqlBuilder }
@@ -87,21 +88,14 @@ sql.safe = safeExpression
 export function spreadAnd<T>(record: any): SqlBuilder<T> {
   const columnValues = Object.entries(filterUndefined(record))
 
-  return mkSqlBuilder(nextParamID => {
-    let values: any[] = []
-    const andChain = columnValues
-      .map(([columnName, columnValue]) => {
-        const serialized = buildSql(columnValue, nextParamID)
-        values = [...values, ...serialized.values]
-        nextParamID += serialized.values.length
-        return `${escapeIdentifier(columnName)} = ${serialized.text}`
-      })
-      .join(" AND ")
-    return {
-      text: `(${andChain})`,
-      values
-    }
+  const andChainBuilders = columnValues.map(([columnName, columnValue]) => {
+    const identifier = escapeIdentifier(columnName)
+    return joinSql([rawSqlBuilder(identifier), toSqlBuilder(columnValue)], " = ")
   })
+
+  const andChain = joinSql(andChainBuilders, " AND ")
+
+  return transformSql(andChain, text => `(${text})`)
 }
 
 /**
@@ -148,19 +142,10 @@ export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
 export function spreadUpdate(record: any): SqlBuilder {
   const updateValues = Object.entries(filterUndefined(record))
 
-  return mkSqlBuilder(nextParamID => {
-    let values: any[] = []
-    const settersChain = updateValues
-      .map(([columnName, columnValue]) => {
-        const serialized = buildSql(columnValue, nextParamID)
-        values = [...values, ...serialized.values]
-        nextParamID += serialized.values.length
-        return `${escapeIdentifier(columnName)} = ${serialized.text}`
-      })
-      .join(", ")
-    return {
-      text: `${settersChain}`,
-      values
-    }
+  const updateChainBuilders = updateValues.map(([columnName, columnValue]) => {
+    const identifier = escapeIdentifier(columnName)
+    return joinSql([rawSqlBuilder(identifier), toSqlBuilder(columnValue)], " = ")
   })
+
+  return joinSql(updateChainBuilders, ", ")
 }

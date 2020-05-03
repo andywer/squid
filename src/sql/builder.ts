@@ -7,7 +7,7 @@ export interface SqlBuilder<T = any> {
 
 const $sqlBuilderSymbol = Symbol("SqlBuilder")
 
-export function mkSqlBuilder<T = any>(
+function mkSqlBuilder<T = any>(
   buildFragment: (nextParamID: number) => QueryConfig<T>
 ): SqlBuilder<T> {
   return {
@@ -16,7 +16,7 @@ export function mkSqlBuilder<T = any>(
   }
 }
 
-export function isSqlBuilder(builder: any): builder is SqlBuilder {
+function isSqlBuilder(builder: any): builder is SqlBuilder {
   return builder && builder.$type === $sqlBuilderSymbol
 }
 
@@ -86,14 +86,6 @@ export function transformSql(builder: SqlBuilder, callback: (text: string) => st
  */
 export function toSqlBuilder<T>(value: SqlBuilder<T> | T): SqlBuilder<T> {
   return isSqlBuilder(value) ? value : paramSqlBuilder(value)
-}
-
-/**
- * Build the given value. If it's a SqlBuilder, run buildFragment, otherwise
- * build it as a SQL parameter.
- */
-export function buildSql<T>(value: SqlBuilder<T> | T, nextParamID: number): QueryConfig<T> {
-  return toSqlBuilder(value).buildFragment(nextParamID)
 }
 
 /**

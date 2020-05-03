@@ -3,10 +3,7 @@ import { escapeIdentifier, extractKeys, filterUndefined, mergeLists } from "../u
 import { QueryConfig } from "./config"
 import {
   SqlBuilder,
-  buildSql,
   joinSql,
-  mkSqlBuilder,
-  isSqlBuilder,
   paramSqlBuilder,
   rawSqlBuilder,
   toSqlBuilder,

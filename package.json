@@ -8,8 +8,8 @@
     "prebuild": "rimraf dist/",
     "build": "tsc",
     "test": "ava",
-    "test:e2e": "ava --config ava.e2e-config.js",
     "posttest": "prettier --list-different 'src/**' && tslint --project .",
+    "test:e2e": "ava --config ava.e2e-config.js",
     "prepare": "npm run build"
   },
   "repository": "andywer/squid",

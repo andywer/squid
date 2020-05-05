@@ -10,6 +10,7 @@
     "test": "ava",
     "posttest": "prettier --list-different 'src/**' && tslint --project .",
     "test:e2e": "ava --config ava.e2e-config.js",
+    "db:start": "docker run --rm -p 5432:5432 -e POSTGRES_USER=$USER -e POSTGRES_DB=$USER -e POSTGRES_HOST_AUTH_METHOD=trust postgres:10.4-alpine",
     "prepare": "npm run build"
   },
   "repository": "andywer/squid",

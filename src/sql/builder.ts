@@ -2,17 +2,20 @@ import { QueryConfig } from "./config"
 
 export interface SqlBuilder<T = any> {
   $type: symbol
-  buildFragment(nextParamID: number): QueryConfig<T>
+  values: T[]
+  buildText(nextParamID: number): string
 }
 
 const $sqlBuilderSymbol = Symbol("SqlBuilder")
 
 function mkSqlBuilder<T = any>(
-  buildFragment: (nextParamID: number) => QueryConfig<T>
+  values: T[],
+  buildText: (nextParamID: number) => string
 ): SqlBuilder<T> {
   return {
     $type: $sqlBuilderSymbol,
-    buildFragment
+    values,
+    buildText
   }
 }
 
@@ -24,7 +27,10 @@ function isSqlBuilder(builder: any): builder is SqlBuilder {
  * Generate the full SQL query.
  */
 export function buildSql<T>(builder: SqlBuilder<T>): QueryConfig<T> {
-  return builder.buildFragment(1)
+  return {
+    text: builder.buildText(1),
+    values: builder.values
+  }
 }
 
 /**
@@ -48,24 +54,21 @@ export function buildSql<T>(builder: SqlBuilder<T>): QueryConfig<T> {
  *   values: ["bar"]
  * }
  */
-export function joinSql(builders: SqlBuilder[], delimiter = ""): SqlBuilder {
-  return mkSqlBuilder(nextParamID => {
-    let paramID = nextParamID
-    const builtText: string[] = []
-    const builtValues: any[] = []
+export function joinSql<T>(builders: Array<SqlBuilder<T>>, delimiter = ""): SqlBuilder<T> {
+  return mkSqlBuilder(
+    builders.reduce((acc, { values }) => acc.concat(values), [] as T[]),
+    nextParamID => {
+      let paramID = nextParamID
+      const builtText: string[] = []
 
-    builders.forEach(builder => {
-      const { text, values } = builder.buildFragment(paramID)
-      paramID += values.length
-      builtText.push(text)
-      builtValues.push(...values)
-    })
+      builders.forEach(({ buildText, values }) => {
+        builtText.push(buildText(paramID))
+        paramID += values.length
+      })
 
-    return {
-      text: builtText.join(delimiter),
-      values: builtValues
+      return builtText.join(delimiter)
     }
-  })
+  )
 }
 
 /**
@@ -85,10 +88,7 @@ export function toSqlBuilder<T>(value: SqlBuilder<T> | T): SqlBuilder<T> {
  * }
  */
 export function rawSqlBuilder(value: string): SqlBuilder<string> {
-  return mkSqlBuilder(() => ({
-    text: value,
-    values: []
-  }))
+  return mkSqlBuilder([], () => value)
 }
 
 /**
@@ -101,8 +101,5 @@ export function rawSqlBuilder(value: string): SqlBuilder<string> {
  * }
  */
 export function paramSqlBuilder<T>(value: T): SqlBuilder<T> {
-  return mkSqlBuilder(nextParamID => ({
-    text: "$" + nextParamID.toString(),
-    values: [value]
-  }))
+  return mkSqlBuilder([value], nextParamID => "$" + nextParamID.toString())
 }

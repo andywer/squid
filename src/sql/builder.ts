@@ -21,6 +21,13 @@ function isSqlBuilder(builder: any): builder is SqlBuilder {
 }
 
 /**
+ * Generate the full SQL query.
+ */
+export function buildSql<T>(builder: SqlBuilder<T>): QueryConfig<T> {
+  return builder.buildFragment(1)
+}
+
+/**
  * Merge the given SqlBuilders, concatenating the text values and parametrized
  * values.
  *

@@ -3,6 +3,7 @@ import { escapeIdentifier, extractKeys, filterUndefined, mergeLists } from "../u
 import { QueryConfig } from "./config"
 import {
   SqlBuilder,
+  buildSql,
   joinSql,
   paramSqlBuilder,
   rawSqlBuilder,
@@ -52,7 +53,8 @@ export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfi
 
   const sqlBuilders = mergeLists(textSqlBuilders, valueSqlBuilders)
 
-  const query = joinSql(sqlBuilders).buildFragment(1)
+  const sqlBuilder = joinSql(sqlBuilders)
+  const query = buildSql(sqlBuilder)
 
   debugQuery(query)
   return query

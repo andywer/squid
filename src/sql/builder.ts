@@ -69,26 +69,6 @@ export function joinSql(builders: SqlBuilder[], delimiter = ""): SqlBuilder {
 }
 
 /**
- * Transform the text content in the given SqlBuilder.
- *
- * @example
- * const builder = transformSql(paramSqlBuilder("hello"), text => `(${text})`)
- * builder.buildFragment(1) ==> {
- *   text: "($1)",
- *   values: [value]
- * }
- */
-export function transformSql(builder: SqlBuilder, callback: (text: string) => string): SqlBuilder {
-  return mkSqlBuilder(nextParamID => {
-    const { text, values } = builder.buildFragment(nextParamID)
-    return {
-      text: callback(text),
-      values
-    }
-  })
-}
-
-/**
  * Convert the given value to a SqlBuilder if it's not already.
  */
 export function toSqlBuilder<T>(value: SqlBuilder<T> | T): SqlBuilder<T> {

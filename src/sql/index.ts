@@ -7,8 +7,7 @@ import {
   joinSql,
   paramSqlBuilder,
   rawSqlBuilder,
-  toSqlBuilder,
-  transformSql
+  toSqlBuilder
 } from "./builder"
 
 export { QueryConfig, SqlBuilder }
@@ -32,6 +31,17 @@ const debugQuery = createDebugLogger("squid:query")
  * `)
  */
 export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfig {
+  const sqlBuilder = sqlBuild(texts, ...values)
+  const query = buildSql(sqlBuilder)
+
+  debugQuery(query)
+  return query
+}
+
+/**
+ * Internal template string tag that builds a SqlBuilder.
+ */
+function sqlBuild(texts: TemplateStringsArray, ...values: any[]): SqlBuilder {
   // General idea:
   //   sql`foo ${1} bar ${sql.raw(2)}`
   // =>
@@ -53,11 +63,7 @@ export function sql(texts: TemplateStringsArray, ...values: any[]): PgQueryConfi
 
   const sqlBuilders = mergeLists(textSqlBuilders, valueSqlBuilders)
 
-  const sqlBuilder = joinSql(sqlBuilders)
-  const query = buildSql(sqlBuilder)
-
-  debugQuery(query)
-  return query
+  return joinSql(sqlBuilders)
 }
 
 /**
@@ -89,12 +95,12 @@ export function spreadAnd<T>(record: any): SqlBuilder<T> {
 
   const andChainBuilders = columnValues.map(([columnName, columnValue]) => {
     const identifier = escapeIdentifier(columnName)
-    return joinSql([rawSqlBuilder(identifier), toSqlBuilder(columnValue)], " = ")
+    return sqlBuild`${sql.raw(identifier)} = ${columnValue}`
   })
 
   const andChain = joinSql(andChainBuilders, " AND ")
 
-  return transformSql(andChain, text => `(${text})`)
+  return sqlBuild`(${andChain})`
 }
 
 /**
@@ -104,17 +110,16 @@ export function spreadAnd<T>(record: any): SqlBuilder<T> {
  */
 export function spreadInsert<T>(...records: ValueRecord[]): SqlBuilder<T> {
   const columnNames = extractKeys(records.map(filterUndefined))
-
-  // `("column1", "column2", ...) VALUES `
-  const identifiers = columnNames.map(escapeIdentifier)
-  const prefix = `(${identifiers.join(", ")}) VALUES `
+  const identifiers = columnNames.map(escapeIdentifier).join(", ")
 
   const insertChainBuilders = records.map(record => {
     const recordColumns = columnNames.map(columnName => toSqlBuilder(record[columnName]))
-    return transformSql(joinSql(recordColumns, ", "), text => `(${text})`)
+    return sqlBuild`(${joinSql(recordColumns, ", ")})`
   })
 
-  return transformSql(joinSql(insertChainBuilders, ", "), text => prefix + text)
+  const insertChain = joinSql(insertChainBuilders, ", ")
+
+  return sqlBuild`(${sql.raw(identifiers)}) VALUES ${insertChain}`
 }
 
 /**
@@ -127,7 +132,7 @@ export function spreadUpdate(record: any): SqlBuilder {
 
   const updateChainBuilders = updateValues.map(([columnName, columnValue]) => {
     const identifier = escapeIdentifier(columnName)
-    return joinSql([rawSqlBuilder(identifier), toSqlBuilder(columnValue)], " = ")
+    return sqlBuild`${sql.raw(identifier)} = ${columnValue}`
   })
 
   return joinSql(updateChainBuilders, ", ")

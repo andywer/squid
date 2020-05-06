@@ -9,6 +9,8 @@
     "build": "tsc",
     "test": "ava",
     "posttest": "prettier --list-different 'src/**' && tslint --project .",
+    "test:e2e": "ava --config ava.e2e-config.js",
+    "db:start": "docker run --rm -p 5432:5432 -e POSTGRES_USER=$USER -e POSTGRES_DB=$USER -e POSTGRES_HOST_AUTH_METHOD=trust postgres:10.4-alpine",
     "prepare": "npm run build"
   },
   "repository": "andywer/squid",
@@ -28,6 +30,7 @@
     "ava": "^2.3.0",
     "dedent": "^0.7.0",
     "husky": "^1.2.1",
+    "pg": "^8.0.3",
     "prettier": "^1.15.3",
     "pretty-quick": "^1.8.0",
     "rimraf": "^3.0.0",
@@ -45,15 +48,6 @@
     "*.js",
     "dist/**/*"
   ],
-  "ava": {
-    "compileEnhancements": false,
-    "extensions": [
-      "ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ]
-  },
   "husky": {
     "hooks": {
       "pre-commit": "pretty-quick --staged"

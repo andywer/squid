@@ -1,5 +1,5 @@
 import test from "ava"
-import { escapeIdentifier, mergeLists, objectEntries } from "../src/utils"
+import { escapeIdentifier, extractKeys, filterUndefined, mergeLists } from "../src/utils"
 
 test("escapeIdentifier wraps in quotes", t => {
   t.is(escapeIdentifier("column"), '"column"')
@@ -30,10 +30,31 @@ test("mergeLists works on lists of different lengths", t => {
   t.deepEqual(mergeLists([1, 2, 3, 4, 5], [6, 7, 8]), [1, 6, 2, 7, 3, 8, 4, 5])
 })
 
-test("objectEntries lists out object entries", t => {
-  t.deepEqual(objectEntries({ a: 1, b: 2 }), [["a", 1], ["b", 2]])
+test("filterUndefined filters out undefined keys", t => {
+  t.deepEqual(filterUndefined({ a: 1, b: undefined }), { a: 1 })
 })
 
-test("objectEntries filters out undefineds", t => {
-  t.deepEqual(objectEntries({ a: 1, b: undefined }), [["a", 1]])
+test("extractKeys returns the keys in the objects", t => {
+  t.deepEqual(extractKeys([{ a: 1, b: 2 }, { a: 2, b: 4 }, { a: 3, b: 6 }]), ["a", "b"])
+})
+
+test("extractKeys errors on an empty list", t => {
+  t.throws(() => {
+    extractKeys([])
+  })
+})
+
+test("extractKeys checks that the keys are all the same", t => {
+  t.throws(() => {
+    extractKeys([{ a: 1, b: 2 }, { a: 1 }])
+  })
+
+  // see FIXME
+  t.notThrows(() => {
+    extractKeys([{ a: 1 }, { a: 1, b: 2 }])
+  })
+
+  t.throws(() => {
+    extractKeys([{ a: 1, b: 2 }, { a: 1, c: 2 }])
+  })
 })

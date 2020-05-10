@@ -94,7 +94,6 @@ test("spreadInsert() works with multiple inserts", t => {
           created_at: sql.raw("NOW()")
         },
         {
-          bar: 1,
           age: 27,
           name: "Hans",
           created_at: null

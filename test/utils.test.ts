@@ -49,8 +49,7 @@ test("extractKeys checks that the keys are all the same", t => {
     extractKeys([{ a: 1, b: 2 }, { a: 1 }])
   })
 
-  // see FIXME
-  t.notThrows(() => {
+  t.throws(() => {
     extractKeys([{ a: 1 }, { a: 1, b: 2 }])
   })
 

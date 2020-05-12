@@ -1,5 +1,5 @@
 import createDebugLogger from "debug"
-import { escapeIdentifier, extractKeys, filterUndefined, mergeLists } from "../utils"
+import { escapeIdentifier, extractKeys, filterUndefined, mergeLists, ValueRecord } from "../utils"
 import { QueryConfig } from "./config"
 import {
   SqlBuilder,
@@ -13,9 +13,6 @@ import {
 export { QueryConfig, SqlBuilder }
 
 type PgQueryConfig = QueryConfig
-interface ValueRecord<T = any> {
-  [key: string]: T
-}
 
 const debugQuery = createDebugLogger("squid:query")
 

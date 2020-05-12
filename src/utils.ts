@@ -57,10 +57,7 @@ function areSetsEqual<T>(set1: Set<T>, set2: Set<T>): boolean {
     if (difference.has(elem)) {
       difference.delete(elem)
     } else {
-      // FIXME: uncommenting this causes change in behavior, where spreadInsert()
-      // currently allows extra keys to be specified in latter objects that will
-      // be ignored
-      // return false
+      return false
     }
   }
 

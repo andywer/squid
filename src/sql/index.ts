@@ -12,7 +12,7 @@ import {
 
 export { QueryConfig, SqlBuilder }
 
-type PgQueryConfig = QueryConfig
+export type PgQueryConfig = QueryConfig
 
 const debugQuery = createDebugLogger("squid:query")
 

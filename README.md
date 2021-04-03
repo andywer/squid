@@ -1,7 +1,7 @@
 <h1 align="center">squid</h1>
 
 <p align="center">
-  <b>SQL tagged template strings and schema definitions for JavaScript & TypeScript 3.</b>
+  <b>SQL tagged template strings and schema definitions for JavaScript & TypeScript.</b>
 </p>
 
 <p align="center">

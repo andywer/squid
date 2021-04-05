@@ -9,7 +9,8 @@ export enum ColumnType {
   JSON = "json",
   Number = "number",
   Object = "object",
-  String = "string"
+  String = "string",
+  UUID = "uuid"
 }
 
 interface ObjectShape {
@@ -118,6 +119,9 @@ interface SchemaTypes {
   /** Data type for CHAR, VARCHAR, TEXT columns. */
   String: { type: ColumnType.String }
 
+  /** Data type for Uuid */
+  UUID: { type: ColumnType.UUID }
+
   /** Data type for array columns. Pass the data type of the array elements. */
   Array<SubType extends ColumnDescription<any, any, any, any>>(
     subtype: SubType
@@ -161,6 +165,7 @@ export const Schema: SchemaTypes = {
   Date: { type: ColumnType.Date },
   Number: { type: ColumnType.Number },
   String: { type: ColumnType.String },
+  UUID: { type: ColumnType.UUID },
 
   Array<SubType extends ColumnDescription<any, any, any, any>>(elementType: SubType) {
     return { type: ColumnType.Array, subtype: elementType }

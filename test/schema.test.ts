@@ -7,6 +7,7 @@ test("can define a schema", t => {
       id: Schema.Number,
       email: Schema.String,
       email_confirmed: Schema.Boolean,
+      uuid: Schema.UUID,
       profile: Schema.JSON(
         Schema.Object({
           avatar_url: Schema.String,

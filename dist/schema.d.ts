@@ -7,7 +7,8 @@ export declare enum ColumnType {
     JSON = "json",
     Number = "number",
     Object = "object",
-    String = "string"
+    String = "string",
+    UUID = "uuid"
 }
 interface ObjectShape {
     [propName: string]: ColumnDescription<any, any, any, any>;
@@ -75,6 +76,10 @@ interface SchemaTypes {
     /** Data type for CHAR, VARCHAR, TEXT columns. */
     String: {
         type: ColumnType.String;
+    };
+    /** Data type for Uuid */
+    UUID: {
+        type: ColumnType.UUID;
     };
     /** Data type for array columns. Pass the data type of the array elements. */
     Array<SubType extends ColumnDescription<any, any, any, any>>(subtype: SubType): ColumnDescription<ColumnType.Array, SubType, any, any>;
